@@ -23,6 +23,7 @@ from ..config import get_settings
 from ..db import get_session
 from ..main import render
 from ..models.user import UserStatus
+from ..safe_redirect import safe_next
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -153,7 +154,7 @@ def signup_submit(
                     target_kind="user",
                     target_id=u.id,
                     target_label=u.full_name,
-                    detail=f"status=pending; mobile={u.mobile_e164}",
+                    detail="status=pending",
                 )
                 session.commit()
                 return HTMLResponse(
@@ -274,8 +275,10 @@ def signin_submit(
         target_label=u.full_name,
     )
     session.commit()
-    # Issue session in a redirect so the cookie is set.
-    resp = RedirectResponse(next or "/", status_code=303)
+    # Issue session in a redirect so the cookie is set. The `next` value
+    # is sanitized so an attacker can't bounce the user to an external
+    # URL after sign-in.
+    resp = RedirectResponse(safe_next(next, "/"), status_code=303)
     issue_session(resp, u, s)
     return resp
 

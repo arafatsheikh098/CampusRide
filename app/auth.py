@@ -277,6 +277,10 @@ def require_member(user: User | None) -> User:
 def require_moderator(user: User | None) -> User:
     if user is None or user.role != UserRole.MODERATOR:
         raise HTTPException(status_code=403, detail="moderator_required")
+    # Suspension applies to existing sessions immediately (G4). A suspended
+    # moderator must not be able to act through their old session.
+    if user.status != UserStatus.APPROVED:
+        raise HTTPException(status_code=403, detail="not_approved")
     return user
 
 

@@ -297,15 +297,23 @@ def _attach_security_headers(app: FastAPI, s: Settings) -> None:
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("Referrer-Policy", "no-referrer")
         resp.headers.setdefault("X-Frame-Options", "DENY")
+        # The app does not need camera, mic, geolocation, or payment. Lock
+        # those down explicitly so a future injected script can't ask.
+        resp.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=()",
+        )
         csp = (
             "default-src 'self'; "
             "script-src 'self'; "
             "style-src 'self'; "
             "img-src 'self' data:; "
             "connect-src 'self'; "
+            "object-src 'none'; "
             "frame-ancestors 'none'; "
             "base-uri 'self'; "
-            "form-action 'self'"
+            "form-action 'self'; "
+            "upgrade-insecure-requests"
         )
         resp.headers.setdefault("Content-Security-Policy", csp)
         if request.url.scheme == "https":

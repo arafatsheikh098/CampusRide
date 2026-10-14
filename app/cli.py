@@ -104,7 +104,9 @@ def _create_moderator(*, mobile: str, password: str, full_name: str, department:
         )
         session.add(u)
         session.commit()
-        print(f"created moderator id={u.id} mobile={u.mobile_e164}")
+        # Log only the user id, never the mobile number, so the secret
+        # doesn't leak into shell history or captured stdout/stderr.
+        print(f"created moderator id={u.id}")
     return 0
 
 
