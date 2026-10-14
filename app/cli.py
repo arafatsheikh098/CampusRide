@@ -60,11 +60,16 @@ def main(argv: list[str] | None = None) -> int:
             department=args.department,
             batch=args.batch,
         )
-    if args.cmd in ("purge", "seed"):
-        # Implemented in the appropriate milestone; this guard makes the
-        # command explicit rather than silent.
-        print(f"{args.cmd} is implemented in a later milestone.", file=sys.stderr)
-        return 2
+    if args.cmd == "purge":
+        from .purge import purge as _purge
+        counts = _purge()
+        print("purged:", counts)
+        return 0
+    if args.cmd == "seed":
+        from .seed import seed as _seed
+        counts = _seed()
+        print("seeded:", counts)
+        return 0
     p.print_help()
     return 1
 

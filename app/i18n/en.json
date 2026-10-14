@@ -256,5 +256,11 @@
   "telegram.unlink": "Unlink Telegram",
   "telegram.get_code": "Get one-time code",
   "telegram.code_title": "Send this to the bot",
-  "telegram.code_notice": "The code is good for 15 minutes. After you send it, the bot knows your chat id and we send reminders there."
+  "telegram.code_notice": "The code is good for 15 minutes. After you send it, the bot knows your chat id and we send reminders there.",
+  "me.delete.title": "Delete your data",
+  "me.delete.lede": "Anonymise your account, cancel your pending bookings, and sign you out. Audit log entries keep your user id but not your name or mobile.",
+  "me.delete.confirm": "Type DELETE to confirm",
+  "me.delete.submit": "Delete my data",
+  "me.delete.done": "Your account has been anonymised and your bookings cancelled.",
+  "me.delete.bad_confirm": "Type DELETE exactly to confirm."
 }
