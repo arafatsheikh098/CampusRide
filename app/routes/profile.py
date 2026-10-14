@@ -17,6 +17,7 @@ from ..main import render
 from ..models.booking import Booking, BookingStatus
 from ..models.trip import Trip, TripInstance, TripStatus
 from ..models.user import User, UserStatus
+from ..safe_redirect import safe_next
 from ..security import hash_password
 
 router = APIRouter(prefix="/me", tags=["profile"])
@@ -39,12 +40,16 @@ async def toggle_theme(request: Request, next: str = Form("/")) -> Response:
         "cr_theme",
         new,
         max_age=60 * 60 * 24 * 365,
-        httponly=False,  # readable by the small JS so the page re-themes immediately
+        # Not HttpOnly on purpose: app/static/js/app.js reads this cookie
+        # during early page load to set the data-theme attribute on <html>
+        # and avoid a flash of the wrong theme. The cookie value is just
+        # "light" or "dark" and is not sensitive.
+        httponly=False,
         samesite="lax",
         secure=s.is_production,
         path="/",
     )
-    resp.headers["X-Cr-Next"] = next or "/"
+    resp.headers["X-Cr-Next"] = safe_next(next, "/")
     return resp
 
 
@@ -63,12 +68,15 @@ async def toggle_lang(request: Request, next: str = Form("/")) -> Response:
         "cr_lang",
         new,
         max_age=60 * 60 * 24 * 365,
-        httponly=False,
+        # The page is server-rendered and the JS doesn't read this cookie,
+        # so HttpOnly is safe and avoids exposing the user's preferred
+        # language to any future injected script.
+        httponly=True,
         samesite="lax",
         secure=s.is_production,
         path="/",
     )
-    resp.headers["X-Cr-Next"] = next or "/"
+    resp.headers["X-Cr-Next"] = safe_next(next, "/")
     return resp
 
 

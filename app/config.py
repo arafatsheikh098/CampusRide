@@ -6,6 +6,7 @@ with it (see `app.security.assert_safe_secret_key`).
 """
 from __future__ import annotations
 
+import re
 from functools import lru_cache
 from typing import List
 
@@ -72,6 +73,55 @@ class Settings(BaseSettings):
         if v <= 0:
             raise ValueError("must be positive")
         return v
+
+    @field_validator("trip_horizon_days")
+    @classmethod
+    def _horizon_upper(cls, v: int) -> int:
+        # Capped to keep the per-trip instance count bounded; 60 days is
+        # already a generous booking window for a campus commute app.
+        if v > 60:
+            raise ValueError("trip_horizon_days must be <= 60")
+        return v
+
+    @field_validator("cost_per_seat_cap_paisa")
+    @classmethod
+    def _cost_upper(cls, v: int) -> int:
+        # 100 000 paisa = 1000 BDT; refuse to allow absurd caps.
+        if v < 0 or v > 100_000:
+            raise ValueError("cost_per_seat_cap_paisa must be 0..100000")
+        return v
+
+    @field_validator("emergency_number")
+    @classmethod
+    def _emergency(cls, v: str) -> str:
+        if not re.fullmatch(r"\d{3,6}", v or ""):
+            raise ValueError("emergency_number must be 3-6 digits")
+        return v
+
+    @field_validator("telegram_webhook_secret")
+    @classmethod
+    def _webhook_secret(cls, v: str | None) -> str | None:
+        # When the operator enables the Telegram webhook, the secret token
+        # they register with the Bot API must be at least 32 chars; anything
+        # shorter is brute-forceable.
+        if v is not None and v != "" and len(v) < 32:
+            raise ValueError(
+                "telegram_webhook_secret must be at least 32 characters when set"
+            )
+        return v or None
+
+    @field_validator("supported_langs")
+    @classmethod
+    def _supported_langs(cls, v: str) -> str:
+        langs = [s.strip() for s in v.split(",") if s.strip()]
+        if not langs:
+            raise ValueError("supported_langs must list at least one code")
+        for code in langs:
+            if not re.fullmatch(r"[a-z]{2}", code):
+                raise ValueError(
+                    f"supported_langs entry {code!r} is not a 2-letter code"
+                )
+        return ",".join(langs)
 
 
 @lru_cache(maxsize=1)

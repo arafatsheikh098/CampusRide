@@ -83,7 +83,8 @@ def _release_advisory_lock(eng, key: int) -> None:
 
 def _dispatch_trip_reminder(payload: dict) -> None:
     """Write an in-app reminder to the rider. Skip if the trip is no
-    longer active or the booking is no longer accepted."""
+    longer active, the booking is no longer accepted, or the departure
+    time is already in the past (a late reminder is confusing)."""
     from .models.booking import Booking, BookingStatus
     from .models.notification import Notification
     from .models.trip import TripInstance, TripStatus
@@ -94,12 +95,20 @@ def _dispatch_trip_reminder(payload: dict) -> None:
         return
     eng = get_engine()
     factory = make_session_factory(eng)
+    now = datetime.now(timezone.utc)
     with factory() as sess:
         b = sess.get(Booking, bid)
         if b is None or b.status != BookingStatus.ACCEPTED:
             return
         inst = sess.get(TripInstance, b.trip_instance_id)
         if inst is None or inst.status != TripStatus.ACTIVE:
+            return
+        depart_at = inst.depart_at
+        if depart_at.tzinfo is None:
+            depart_at = depart_at.replace(tzinfo=timezone.utc)
+        # Don't send a "departs at HH:MM" reminder for a trip that has
+        # already departed (the worker can be delayed by a cold start).
+        if depart_at <= now:
             return
         rider = sess.get(User, b.rider_id)
         if rider is None:
