@@ -242,5 +242,19 @@
   "moderation.report.created": "Created",
   "moderation.report.resolved": "Resolved",
   "nav.blocks": "Blocks",
-  "nav.safety": "Safety"
+  "nav.safety": "Safety",
+  "nav.telegram": "Telegram",
+  "notifications.mark_read": "Mark read",
+  "notifications.mark_all_read": "Mark all read",
+  "notifications.body": "Message",
+  "notifications.when": "When",
+  "notifications.kind.trip_reminder": "Trip reminder",
+  "telegram.title": "Telegram notifications",
+  "telegram.lede": "Get trip reminders in Telegram. We send a one-time code that you send to the bot; the bot then knows your chat id.",
+  "telegram.disabled": "Telegram notifications are not enabled on this deployment.",
+  "telegram.linked": "Your Telegram is linked.",
+  "telegram.unlink": "Unlink Telegram",
+  "telegram.get_code": "Get one-time code",
+  "telegram.code_title": "Send this to the bot",
+  "telegram.code_notice": "The code is good for 15 minutes. After you send it, the bot knows your chat id and we send reminders there."
 }

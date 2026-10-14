@@ -11,7 +11,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -280,6 +280,35 @@ def accept_booking(
         detail=f"driver accepted booking #{b.id} on instance #{inst.id}",
     )
     notify_booking_decision(session, booking=b, accepted=True)
+    # Schedule a 1-hour reminder for the rider. Dedupe by booking id so
+    # re-accepts of the same booking don't double-fire.
+    from ..jobs import enqueue
+    depart_at_aware = (
+        inst.depart_at.replace(tzinfo=timezone.utc)
+        if inst.depart_at.tzinfo is None else inst.depart_at
+    )
+    enqueue(
+        session,
+        kind="trip_reminder",
+        run_at=depart_at_aware - timedelta(hours=1),
+        payload={"booking_id": b.id},
+        dedupe_key=f"trip_reminder:{b.id}",
+    )
+    # Also queue a minimal Telegram push for anyone linked.
+    from ..models.user import User
+    rider = session.get(User, b.rider_id)
+    if rider is not None and rider.telegram_chat_id:
+        when = depart_at_aware.strftime("%Y-%m-%d %H:%M UTC")
+        enqueue(
+            session,
+            kind="telegram_ping",
+            run_at=depart_at_aware - timedelta(hours=1),
+            payload={
+                "chat_id": rider.telegram_chat_id,
+                "text": f"CampusRide: your ride departs at {when}.",
+            },
+            dedupe_key=f"telegram_ping:rider:{b.id}",
+        )
     session.commit()
     return RedirectResponse(url=f"/trips/{trip.id}", status_code=303)
 

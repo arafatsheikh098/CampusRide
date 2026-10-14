@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ t('telegram.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('telegram.title', lang) }}</h1>
+  {% if not enabled %}
+    <p class="cr-notice">{{ t('telegram.disabled', lang) }}</p>
+  {% elif me.telegram_chat_id %}
+    <p class="cr-ok">{{ t('telegram.linked', lang) }}</p>
+    <form method="post" action="/telegram/unlink">
+      <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+      <button class="cr-btn cr-btn--ghost" type="submit">{{ t('telegram.unlink', lang) }}</button>
+    </form>
+  {% else %}
+    <p class="cr-lede">{{ t('telegram.lede', lang) }}</p>
+    <form method="post" action="/telegram/link">
+      <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('telegram.get_code', lang) }}</button>
+    </form>
+    {% if sent_code %}
+      <div class="cr-card">
+        <h2 class="cr-h2">{{ t('telegram.code_title', lang) }}</h2>
+        <p class="cr-notice">{{ t('telegram.code_notice', lang) }}</p>
+        <p><code class="cr-token" id="cr-tg-code">{{ sent_code }}</code></p>
+      </div>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}
