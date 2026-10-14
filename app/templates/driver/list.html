@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t('driver.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('driver.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('driver.lede', lang) }}</p>
+  {% if me.driver_verified %}
+    <p class="cr-ok">
+      {{ t('driver.you_are_verified', lang) }}
+      — {{ me.vehicle_description }}
+    </p>
+  {% else %}
+    <p>{{ t('driver.not_verified', lang) }}</p>
+  {% endif %}
+  <h2 class="cr-h2">{{ t('driver.list_title', lang) }}</h2>
+  {% if not drivers %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <ul class="cr-list">
+    {% for d in drivers %}
+      <li><strong>{{ d.full_name }}</strong> — {{ d.vehicle_description }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

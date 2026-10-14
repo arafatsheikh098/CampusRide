@@ -12,7 +12,7 @@
     <tbody>
       {% for u in pending %}
       <tr>
-        <td>{{ u.full_name }}</td>
+        <td><a href="/moderation/accounts/{{ u.id }}">{{ u.full_name }}</a></td>
         <td>{{ u.department }}</td>
         <td>{{ u.mobile_e164 }}</td>
         <td>{{ u.batch_or_session }}</td>
@@ -25,15 +25,14 @@
             <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
             <button class="cr-btn cr-btn--danger" type="submit">{{ t('moderation.action.reject', lang) }}</button>
           </form>
-          <form method="post" action="/moderation/accounts/{{ u.id }}/suspend" style="display:inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('moderation.action.suspend', lang) }}</button>
-          </form>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% endif %}
+  <p>
+    <a class="cr-btn cr-btn--ghost" href="/moderation/places">{{ t('places.moderate.title', lang) }}</a>
+  </p>
 </section>
 {% endblock %}

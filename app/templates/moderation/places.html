@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ t('places.moderate.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('places.moderate.title', lang) }}</h1>
+  {% if error %}<p class="cr-error">{{ t(error, lang) }}</p>{% endif %}
+  <form class="cr-form" method="post" action="/moderation/places">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <label>{{ t('places.name', lang) }}
+      <input name="name" required maxlength="80" value="{{ form_values.name|default('') }}">
+    </label>
+    <label>{{ t('places.group', lang) }}
+      <input name="group_label" required maxlength="80" value="{{ form_values.group_label|default('') }}">
+    </label>
+    <label>{{ t('places.kind', lang) }}
+      <select name="kind">
+        {% for k in ('gate', 'hall', 'department', 'pickup', 'neighbourhood') %}
+          <option value="{{ k }}" {% if form_values.kind == k %}selected{% endif %}>{{ t('places.kind.' ~ k, lang) }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('places.moderate.add', lang) }}</button>
+    </div>
+  </form>
+
+  <h2 class="cr-h2">{{ t('places.moderate.list', lang) }}</h2>
+  {% if not places %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead><tr><th>{{ t('places.name', lang) }}</th><th>{{ t('places.group', lang) }}</th><th>{{ t('places.kind', lang) }}</th><th></th></tr></thead>
+    <tbody>
+      {% for p in places %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.group_label }}</td>
+        <td>{{ t('places.kind.' ~ p.kind, lang) }}</td>
+        <td>
+          <form method="post" action="/moderation/places/{{ p.id }}/delete" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('common.delete', lang) }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

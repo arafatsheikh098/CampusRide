@@ -50,10 +50,12 @@ _env.filters["t"] = _jinja_t
 
 
 def render(template: str, /, **ctx) -> str:
-    # Provide safe defaults so child templates can reference `me` and
-    # `csrf` without every route having to pass them.
+    # Provide safe defaults so child templates can reference these without
+    # every route having to pass them.
     ctx.setdefault("me", None)
     ctx.setdefault("csrf", "")
+    ctx.setdefault("form_values", {})
+    ctx.setdefault("form_error", None)
     return _env.get_template(template).render(**ctx)
 
 
