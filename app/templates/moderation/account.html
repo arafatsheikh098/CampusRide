@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ target.full_name }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ target.full_name }}</h1>
+  <dl class="cr-dl">
+    <dt>{{ t('auth.signup.department', lang) }}</dt><dd>{{ target.department }}</dd>
+    <dt>{{ t('auth.signup.batch', lang) }}</dt><dd>{{ target.batch_or_session }}</dd>
+    <dt>{{ t('auth.signup.mobile', lang) }}</dt><dd>{{ target.mobile_e164 }}</dd>
+    <dt>{{ t('moderation.account.status', lang) }}</dt><dd>{{ t('auth.status.' ~ target.status.value, lang) }}</dd>
+    <dt>{{ t('moderation.account.driver', lang) }}</dt>
+    <dd>
+      {% if target.driver_verified %}
+        {{ t('moderation.account.driver_yes', lang) }}
+        — {{ target.vehicle_description }}{% if target.vehicle_plate %} ({{ target.vehicle_plate }}){% endif %}
+      {% else %}{{ t('moderation.account.driver_no', lang) }}{% endif %}
+    </dd>
+    {% if settings.women_only_trips %}
+    <dt>{{ t('moderation.account.women_only', lang) }}</dt>
+    <dd>{{ t('moderation.account.women_only_' ~ ('yes' if target.women_only_eligible else 'no'), lang) }}</dd>
+    {% endif %}
+  </dl>
+
+  {% if target.status.value == 'pending' %}
+  <h2 class="cr-h2">{{ t('moderation.account.decide', lang) }}</h2>
+  <form method="post" action="/moderation/accounts/{{ target.id }}/approve" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--primary" type="submit">{{ t('moderation.action.approve', lang) }}</button>
+  </form>
+  <form method="post" action="/moderation/accounts/{{ target.id }}/reject" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--danger" type="submit">{{ t('moderation.action.reject', lang) }}</button>
+  </form>
+  {% endif %}
+
+  {% if target.status.value == 'approved' %}
+  <h2 class="cr-h2">{{ t('moderation.account.driver_section', lang) }}</h2>
+  {% if target.driver_verified %}
+  <form method="post" action="/moderation/accounts/{{ target.id }}/driver-revoke" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--ghost" type="submit">{{ t('moderation.action.driver_revoke', lang) }}</button>
+  </form>
+  {% else %}
+  <form method="post" action="/moderation/accounts/{{ target.id }}/driver-verify" class="cr-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <label>{{ t('moderation.account.vehicle_desc', lang) }}
+      <input name="vehicle_description" required maxlength="80">
+    </label>
+    <label>{{ t('moderation.account.vehicle_plate', lang) }}
+      <input name="vehicle_plate" maxlength="40">
+    </label>
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('moderation.action.driver_verify', lang) }}</button>
+    </div>
+  </form>
+  {% endif %}
+
+  {% if settings.women_only_trips %}
+  <h2 class="cr-h2">{{ t('moderation.account.women_only_section', lang) }}</h2>
+  {% if target.women_only_eligible %}
+  <form method="post" action="/moderation/accounts/{{ target.id }}/women-only-revoke" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--ghost" type="submit">{{ t('moderation.action.women_only_revoke', lang) }}</button>
+  </form>
+  {% else %}
+  <form method="post" action="/moderation/accounts/{{ target.id }}/women-only-grant" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--primary" type="submit">{{ t('moderation.action.women_only_grant', lang) }}</button>
+  </form>
+  {% endif %}
+  {% endif %}
+  {% endif %}
+
+  {% if target.status.value != 'pending' %}
+  <h2 class="cr-h2">{{ t('moderation.account.danger', lang) }}</h2>
+  {% if target.status.value != 'suspended' %}
+  <form method="post" action="/moderation/accounts/{{ target.id }}/suspend" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--danger" type="submit">{{ t('moderation.action.suspend', lang) }}</button>
+  </form>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

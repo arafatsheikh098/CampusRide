@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ t('places.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('places.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('places.lede', lang) }}</p>
+  {% if not places %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead>
+      <tr>
+        <th>{{ t('places.name', lang) }}</th>
+        <th>{{ t('places.group', lang) }}</th>
+        <th>{{ t('places.kind', lang) }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in places %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.group_label }}</td>
+        <td>{{ t('places.kind.' ~ p.kind, lang) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}
