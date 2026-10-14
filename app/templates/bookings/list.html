@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ t('bookings.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('bookings.title', lang) }}</h1>
+  {% if not bookings %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{{ t('trips.detail.title', lang) }}</th>
+        <th>{{ t('trips.detail.driver', lang) }}</th>
+        <th>{{ t('trips.post.earliest', lang) }}</th>
+        <th>{{ t('common.save', lang) }}</th>
+        <th>{{ t('common.cancel', lang) }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bookings %}
+        {% set inst = instances.get(b.trip_instance_id) %}
+        {% set trip = trips.get(inst.trip_id) if inst else None %}
+        {% set drv = drivers.get(trip.driver_id) if trip else None %}
+        <tr>
+          <td>{{ b.id }}</td>
+          <td>
+            {% if trip %}
+              <a href="/trips/{{ trip.id }}">#{{ trip.id }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ drv.full_name if drv else '—' }}</td>
+          <td>
+            {% if inst %}{{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <span class="cr-badge cr-badge--{% if b.status.value == 'accepted' %}ok{% elif b.status.value == 'declined' %}rejected{% elif b.status.value in ('cancelled_by_rider', 'cancelled_by_driver') %}pending{% else %}pending{% endif %}">
+              {{ t('bookings.' ~ b.status.value, lang) }}
+            </span>
+          </td>
+          <td>
+            {% if b.status.value in ('pending', 'accepted') %}
+            <form method="post" action="/bookings/{{ b.id }}/cancel"
+                  style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+              <button class="cr-btn cr-btn--ghost" type="submit">{{ t('bookings.cancel', lang) }}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

@@ -265,12 +265,38 @@ def trip_detail(
         .where(TripInstance.trip_id == trip_id)
         .order_by(TripInstance.depart_at)
     ).all()
+    instances_by_id = {i.id: i for i in instances}
+    # Driver-side pending bookings list.
+    instance_bookings: dict[int, list] = {}
+    riders_by_id: dict[int, User] = {}
+    if trip.driver_id == me.id:
+        bookings = session.exec(
+            select(Booking)
+            .where(Booking.driver_id == me.id)
+        ).all()
+        inst_ids = {b.trip_instance_id for b in bookings}
+        inst_ids &= set(instances_by_id.keys())
+        rider_ids = {b.rider_id for b in bookings if b.trip_instance_id in inst_ids}
+        if rider_ids:
+            for u in session.exec(
+                select(User).where(User.id.in_(rider_ids))
+            ).all():
+                riders_by_id[u.id] = u
+        for b in bookings:
+            if b.trip_instance_id not in inst_ids:
+                continue
+            instance_bookings.setdefault(b.trip_instance_id, []).append(
+                (b, riders_by_id.get(b.rider_id).full_name
+                 if riders_by_id.get(b.rider_id) else "")
+            )
     return HTMLResponse(
         render(
             "trips/detail.html",
             lang=lang, settings=s, request=request, me=me,
             trip=trip, from_place=from_place, to_place=to_place,
             driver=driver, instances=instances,
+            instances_by_id=instances_by_id,
+            instance_bookings=instance_bookings,
         )
     )
 

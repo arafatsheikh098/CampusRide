@@ -38,6 +38,12 @@
             <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
             <button class="cr-btn cr-btn--ghost" type="submit">{{ t('trips.detail.cancel_instance', lang) }}</button>
           </form>
+          {% elif trip.driver_id != me.id and inst.status.value == 'active' and (trip.seats_offered - inst.seats_taken) > 0 %}
+          <form method="post" action="/bookings/new" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <input type="hidden" name="trip_instance_id" value="{{ inst.id }}">
+            <button class="cr-btn cr-btn--primary" type="submit">{{ t('trips.detail.request_seat', lang) }}</button>
+          </form>
           {% else %}
             {{ inst.status.value }}
           {% endif %}
@@ -46,5 +52,57 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {% if trip.driver_id == me.id and instance_bookings %}
+    <h2 class="cr-h2">{{ t('bookings.title', lang) }}</h2>
+    <table class="cr-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>{{ t('trips.post.earliest', lang) }}</th>
+          <th>{{ t('common.save', lang) }}</th>
+          <th>{{ t('common.save', lang) }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inst_id, items in instance_bookings.items() %}
+          {% set inst = instances_by_id.get(inst_id) %}
+          <tr>
+            <td colspan="4">
+              <strong>{{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</strong>
+            </td>
+          </tr>
+          {% for b, rname in items %}
+            <tr>
+              <td>#{{ b.id }}</td>
+              <td>{{ rname or '—' }}</td>
+              <td>
+                <span class="cr-badge cr-badge--{% if b.status.value == 'accepted' %}ok{% elif b.status.value == 'declined' %}rejected{% else %}pending{% endif %}">
+                  {{ t('bookings.' ~ b.status.value, lang) }}
+                </span>
+              </td>
+              <td>
+                {% if b.status.value == 'pending' %}
+                <form method="post" action="/bookings/{{ b.id }}/accept" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+                  <button class="cr-btn cr-btn--primary" type="submit">{{ t('bookings.accept', lang) }}</button>
+                </form>
+                <form method="post" action="/bookings/{{ b.id }}/decline" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+                  <button class="cr-btn cr-btn--ghost" type="submit">{{ t('bookings.decline', lang) }}</button>
+                </form>
+                {% elif b.status.value == 'accepted' %}
+                <form method="post" action="/bookings/{{ b.id }}/driver_cancel" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+                  <button class="cr-btn cr-btn--ghost" type="submit">{{ t('bookings.cancel', lang) }}</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 </section>
 {% endblock %}
