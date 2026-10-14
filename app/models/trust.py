@@ -55,3 +55,20 @@ class PostTripCheck(SQLModel, table=True):
     answer: PostTripAnswer = Field(nullable=False)
     note: Optional[str] = Field(default=None, max_length=400, nullable=True)
     created_at: datetime = Field(nullable=False)
+
+
+class TrustedContactLink(SQLModel, table=True):
+    """Read-only trusted-contact link (F7). The token is random (>=128 bits)
+    and only the SHA-256 hash is stored; the route compares the hash of
+    the presented token. `expires_at` defaults to trip end + 2 hours."""
+    __tablename__ = "trusted_contact_links"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    booking_id: int = Field(foreign_key="bookings.id", nullable=False, index=True)
+    trip_instance_id: int = Field(
+        foreign_key="trip_instances.id", nullable=False, index=True,
+    )
+    created_by_id: int = Field(foreign_key="users.id", nullable=False, index=True)
+    token_hash: str = Field(max_length=64, nullable=False, unique=True, index=True)
+    created_at: datetime = Field(nullable=False)
+    expires_at: datetime = Field(nullable=False, index=True)

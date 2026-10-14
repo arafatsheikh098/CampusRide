@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ t('reports.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('reports.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('reports.lede', lang) }}</p>
+
+  {% if form_error %}<p class="cr-error">{{ t(form_error, lang) }}</p>{% endif %}
+
+  <form class="cr-form" method="post" action="/reports/new">
+    <label>{{ t('reports.reason', lang) }}
+      <select name="reason" required>
+        {% for r in reasons %}
+          <option value="{{ r.value }}" {% if form_values.reason == r.value %}selected{% endif %}>
+            {{ t('reports.reason.' ~ r.value, lang) }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>{{ t('reports.note', lang) }}
+      <textarea name="note" rows="4" maxlength="400">{{ form_values.note or '' }}</textarea>
+    </label>
+    <input type="hidden" name="target_user_id" value="{{ target_user_id }}">
+    <input type="hidden" name="target_trip_id" value="{{ target_trip_id }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('reports.submit', lang) }}</button>
+    </div>
+  </form>
+  <p class="cr-notice">{{ t('reports.confidential', lang) }}</p>
+</section>
+{% endblock %}

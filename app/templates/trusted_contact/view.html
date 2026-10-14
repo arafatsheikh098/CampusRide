@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t('trusted.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('trusted.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('trusted.lede', lang) }}</p>
+  {% if status == 'ok' and payload %}
+    <ul class="cr-list">
+      <li><strong>{{ t('trusted.from', lang) }}:</strong> {{ payload.from }}</li>
+      <li><strong>{{ t('trusted.to', lang) }}:</strong> {{ payload.to }}</li>
+      <li><strong>{{ t('trusted.depart', lang) }}:</strong> {{ payload.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</li>
+      <li><strong>{{ t('trusted.driver', lang) }}:</strong> {{ payload.driver_first_name }}</li>
+      {% if payload.vehicle_description %}
+        <li><strong>{{ t('trusted.vehicle', lang) }}:</strong> {{ payload.vehicle_description }}</li>
+      {% endif %}
+    </ul>
+    <p class="cr-notice">{{ t('trusted.no_live', lang) }}</p>
+  {% elif status == 'expired' %}
+    <p class="cr-error">{{ t('trusted.expired', lang) }}</p>
+  {% else %}
+    <p class="cr-error">{{ t('trusted.invalid', lang) }}</p>
+  {% endif %}
+  <p class="cr-notice">{{ t('trips.detail.not_safety', lang) }}</p>
+  <p class="cr-notice">{{ t('trips.detail.emergency', lang).replace('{number}', settings.emergency_number) }}</p>
+</section>
+{% endblock %}

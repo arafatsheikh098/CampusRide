@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ t('moderation.report.title', lang) }} #{{ report.id }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('moderation.report.title', lang) }} #{{ report.id }}</h1>
+  <ul class="cr-list">
+    <li><strong>{{ t('reports.reason', lang) }}:</strong> {{ t('reports.reason.' ~ report.reason.value, lang) }}</li>
+    <li><strong>{{ t('auth.signup.full_name', lang) }}:</strong> {{ reporter.full_name if reporter else '—' }}</li>
+    {% if target_user %}
+      <li><strong>{{ t('moderation.report.target_user', lang) }}:</strong>
+        <a href="/moderation/accounts/{{ target_user.id }}">{{ target_user.full_name }}</a>
+      </li>
+    {% endif %}
+    {% if target_trip %}
+      <li><strong>{{ t('moderation.report.target_trip', lang) }}:</strong>
+        <a href="/trips/{{ target_trip.id }}">#{{ target_trip.id }}</a>
+      </li>
+    {% endif %}
+    <li><strong>{{ t('moderation.report.created', lang) }}:</strong> {{ report.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</li>
+    {% if report.note %}
+      <li><strong>{{ t('reports.note', lang) }}:</strong> {{ report.note }}</li>
+    {% endif %}
+  </ul>
+  {% if not report.resolved %}
+  <form method="post" action="/moderation/reports/{{ report.id }}/resolve">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <button class="cr-btn cr-btn--primary" type="submit">{{ t('moderation.action.resolve', lang) }}</button>
+  </form>
+  {% else %}
+    <p class="cr-ok">{{ t('moderation.report.resolved', lang) }}</p>
+  {% endif %}
+  {% if target_trip %}
+    <form method="post" action="/moderation/trips/{{ target_trip.id }}/remove">
+      <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+      <button class="cr-btn cr-btn--danger" type="submit">{{ t('moderation.action.remove_trip', lang) }}</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

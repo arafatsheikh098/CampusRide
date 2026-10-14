@@ -3,6 +3,22 @@
 {% block main %}
 <section class="cr-grid">
   <h1 class="cr-h1">{{ t('bookings.title', lang) }}</h1>
+
+  {% if trusted_token %}
+    <div class="cr-card">
+      <h2 class="cr-h2">{{ t('trusted.share', lang) }}</h2>
+      <p class="cr-notice">{{ t('trusted.share_notice', lang) }}</p>
+      <p>
+        <code class="cr-token" id="cr-trusted-token">{{ trusted_token }}</code>
+      </p>
+      <p><a class="cr-btn cr-btn--ghost" href="/trusted/{{ trusted_token }}" target="_blank" rel="noopener">{{ t('trusted.open', lang) }}</a></p>
+    </div>
+  {% endif %}
+
+  {% if reported %}
+    <p class="cr-ok">{{ t('reports.thanks', lang) }}</p>
+  {% endif %}
+
   {% if not bookings %}
     <p class="cr-ok">—</p>
   {% else %}
@@ -49,6 +65,59 @@
             {% endif %}
           </td>
         </tr>
+        {% if b.status.value == 'accepted' and inst %}
+        <tr>
+          <td colspan="6">
+            <strong>{{ t('contact.title', lang) }}</strong>
+            — {{ t('contact.first_name', lang) }}: <em>{{ (drv.full_name or '').split()[0] if drv else '—' }}</em>,
+            {{ t('contact.department', lang) }}: <em>{{ drv.department if drv else '—' }}</em>,
+            {{ t('contact.mobile', lang) }}: <em>{{ drv.mobile_e164 if drv else '—' }}</em>
+            {% if drv and drv.vehicle_description %}
+            , {{ t('contact.vehicle', lang) }}: <em>{{ drv.vehicle_description }}</em>
+            {% endif %}
+            {% if drv and drv.vehicle_plate %}
+            , {{ t('contact.plate', lang) }}: <em>{{ drv.vehicle_plate }}</em>
+            {% endif %}
+            {% if trip and inst %}
+            <form method="post"
+              action="/trips/{{ trip.id }}/instances/{{ inst.id }}/trusted-link"
+              style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+              <button class="cr-btn cr-btn--ghost" type="submit">{{ t('trusted.button', lang) }}</button>
+            </form>
+            {% endif %}
+            <a class="cr-btn cr-btn--ghost" href="/reports/new?target_user_id={{ drv.id if drv else 0 }}&amp;target_trip_id={{ trip.id if trip else 0 }}">{{ t('reports.button', lang) }}</a>
+          </td>
+        </tr>
+        {% endif %}
+        {% if b.status.value in ('accepted', 'cancelled_by_rider', 'cancelled_by_driver') and inst and b.id not in checks %}
+        <tr>
+          <td colspan="6">
+            <strong>{{ t('post_trip.title', lang) }}</strong>
+            <form method="post" action="/bookings/{{ b.id }}/check" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+              <input type="hidden" name="answer" value="ok">
+              <button class="cr-btn cr-btn--ghost" type="submit">{{ t('post_trip.ok', lang) }}</button>
+            </form>
+            <form method="post" action="/bookings/{{ b.id }}/check" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+              <input type="hidden" name="answer" value="problem">
+              <button class="cr-btn cr-btn--ghost" type="submit">{{ t('post_trip.problem', lang) }}</button>
+            </form>
+            <span class="cr-muted">{{ t('post_trip.private', lang) }}</span>
+          </td>
+        </tr>
+        {% elif checks.get(b.id) %}
+        <tr>
+          <td colspan="6">
+            <strong>{{ t('post_trip.title', lang) }}</strong>:
+            <span class="cr-badge cr-badge--{% if checks[b.id].answer.value == 'ok' %}ok{% else %}pending{% endif %}">
+              {{ t('post_trip.' ~ checks[b.id].answer.value, lang) }}
+            </span>
+            {% if checks[b.id].note %}<em>{{ checks[b.id].note }}</em>{% endif %}
+          </td>
+        </tr>
+        {% endif %}
       {% endfor %}
     </tbody>
   </table>

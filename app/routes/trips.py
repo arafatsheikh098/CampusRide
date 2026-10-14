@@ -289,6 +289,38 @@ def trip_detail(
                 (b, riders_by_id.get(b.rider_id).full_name
                  if riders_by_id.get(b.rider_id) else "")
             )
+    # G3: contact details are revealed only after acceptance, and only to
+    # the two parties. We compute which booking (if any) qualifies for the
+    # current viewer on this trip's instances.
+    my_accepted_booking = None
+    if me.id == trip.driver_id:
+        # The driver sees contact of any rider with an accepted booking.
+        accepted = session.exec(
+            select(Booking).where(
+                Booking.driver_id == me.id,
+                Booking.status == BookingStatus.ACCEPTED,
+            )
+        ).all()
+        for b in accepted:
+            if b.trip_instance_id in instances_by_id:
+                rider = session.get(User, b.rider_id)
+                if rider is not None:
+                    my_accepted_booking = {"other": rider, "booking": b}
+                    break
+    else:
+        # The rider sees the driver's contact if any of their bookings on
+        # this trip is accepted.
+        accepted = session.exec(
+            select(Booking).where(
+                Booking.rider_id == me.id,
+                Booking.driver_id == trip.driver_id,
+                Booking.status == BookingStatus.ACCEPTED,
+            )
+        ).all()
+        for b in accepted:
+            if b.trip_instance_id in instances_by_id:
+                my_accepted_booking = {"other": driver, "booking": b}
+                break
     return HTMLResponse(
         render(
             "trips/detail.html",
@@ -297,6 +329,7 @@ def trip_detail(
             driver=driver, instances=instances,
             instances_by_id=instances_by_id,
             instance_bookings=instance_bookings,
+            my_accepted_booking=my_accepted_booking,
         )
     )
 
