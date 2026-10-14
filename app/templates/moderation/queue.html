@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ t('moderation.queue.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('moderation.queue.title', lang) }}</h1>
+  <h2 class="cr-h2">{{ t('moderation.queue.accounts', lang) }}</h2>
+  {% if not pending %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead><tr><th>{{ t('auth.signup.full_name', lang) }}</th><th>{{ t('auth.signup.department', lang) }}</th><th>{{ t('auth.signup.mobile', lang) }}</th><th>{{ t('auth.signup.batch', lang) }}</th><th>{{ t('common.save', lang) }}</th></tr></thead>
+    <tbody>
+      {% for u in pending %}
+      <tr>
+        <td>{{ u.full_name }}</td>
+        <td>{{ u.department }}</td>
+        <td>{{ u.mobile_e164 }}</td>
+        <td>{{ u.batch_or_session }}</td>
+        <td class="cr-row-actions">
+          <form method="post" action="/moderation/accounts/{{ u.id }}/approve" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--primary" type="submit">{{ t('moderation.action.approve', lang) }}</button>
+          </form>
+          <form method="post" action="/moderation/accounts/{{ u.id }}/reject" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--danger" type="submit">{{ t('moderation.action.reject', lang) }}</button>
+          </form>
+          <form method="post" action="/moderation/accounts/{{ u.id }}/suspend" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('moderation.action.suspend', lang) }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

@@ -20,10 +20,14 @@
       </a>
       <nav class="cr-nav" aria-label="primary">
         <a href="/search">{{ t('nav.search', lang) }}</a>
-        <a href="/trips">{{ t('nav.trips', lang) }}</a>
-        <a href="/bookings">{{ t('nav.bookings', lang) }}</a>
-        <a href="/notifications">{{ t('nav.notifications', lang) }}</a>
-        <a href="/moderation" data-role="moderator">{{ t('nav.admin', lang) }}</a>
+        {% if me is not none and me.status.value == 'approved' %}
+          <a href="/trips">{{ t('nav.trips', lang) }}</a>
+          <a href="/bookings">{{ t('nav.bookings', lang) }}</a>
+          <a href="/notifications">{{ t('nav.notifications', lang) }}</a>
+          {% if me.role.value == 'moderator' %}
+            <a href="/moderation" data-role="moderator">{{ t('nav.admin', lang) }}</a>
+          {% endif %}
+        {% endif %}
       </nav>
       <div class="cr-tools">
         <button id="cr-theme-toggle" class="cr-iconbtn" type="button"
@@ -38,8 +42,23 @@
                 hx-post="/me/lang" hx-vals='{"next":"{{ request.url.path }}"}' hx-swap="none">
           <span class="cr-iconbtn__text">{{ 'EN' if lang == 'en' else 'বাং' }}</span>
         </button>
-        <a class="cr-btn cr-btn--ghost" href="/auth/signin">{{ t('nav.signin', lang) }}</a>
-        <a class="cr-btn" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
+        {% if me is none %}
+          <a class="cr-btn cr-btn--ghost" href="/auth/signin">{{ t('nav.signin', lang) }}</a>
+          <a class="cr-btn" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
+        {% else %}
+          <span class="cr-who" title="{{ me.full_name }}">{{ me.full_name }}</span>
+          {% if me.status.value == 'pending' %}
+            <span class="cr-badge cr-badge--pending">{{ t('auth.status.pending', lang) }}</span>
+          {% elif me.status.value == 'rejected' %}
+            <span class="cr-badge cr-badge--rejected">{{ t('auth.status.rejected', lang) }}</span>
+          {% elif me.status.value == 'suspended' %}
+            <span class="cr-badge cr-badge--suspended">{{ t('auth.status.suspended', lang) }}</span>
+          {% endif %}
+          <form method="post" action="/auth/signout" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('nav.signout', lang) }}</button>
+          </form>
+        {% endif %}
       </div>
     </div>
   </header>

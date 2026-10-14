@@ -8,9 +8,17 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime, timezone
 
 from alembic import command as _alembic_command
 from alembic.config import Config as _AlembicConfig
+from sqlmodel import Session, select
+
+from .config import get_settings
+from .db import get_engine
+from .models.user import User, UserRole, UserStatus
+from .phone import PhoneError, normalize as normalize_phone
+from .security import hash_password
 
 
 def upgrade_db() -> int:
@@ -36,19 +44,63 @@ def main(argv: list[str] | None = None) -> int:
     p_create_mod.add_argument("--mobile", required=True)
     p_create_mod.add_argument("--password", required=True)
     p_create_mod.add_argument("--full-name", required=True)
+    p_create_mod.add_argument("--department", default="Staff")
+    p_create_mod.add_argument("--batch", default="N/A")
     args = p.parse_args(argv)
 
     if args.cmd == "upgrade-db":
         return upgrade_db()
     if args.cmd == "downgrade-db":
         return downgrade_db()
-    if args.cmd in ("purge", "seed", "create-moderator"):
+    if args.cmd == "create-moderator":
+        return _create_moderator(
+            mobile=args.mobile,
+            password=args.password,
+            full_name=args.full_name,
+            department=args.department,
+            batch=args.batch,
+        )
+    if args.cmd in ("purge", "seed"):
         # Implemented in the appropriate milestone; this guard makes the
         # command explicit rather than silent.
         print(f"{args.cmd} is implemented in a later milestone.", file=sys.stderr)
         return 2
     p.print_help()
     return 1
+
+
+def _create_moderator(*, mobile: str, password: str, full_name: str, department: str, batch: str) -> int:
+    try:
+        mobile_e164 = normalize_phone(mobile)
+    except PhoneError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    if len(password) < 8:
+        print("error: password must be at least 8 characters", file=sys.stderr)
+        return 2
+    get_settings()  # ensure env-driven config loaded
+    with Session(get_engine()) as session:
+        existing = session.exec(select(User).where(User.mobile_e164 == mobile_e164)).first()
+        if existing is not None:
+            print("error: a user with that mobile already exists", file=sys.stderr)
+            return 2
+        u = User(
+            full_name=full_name,
+            department=department,
+            batch_or_session=batch,
+            mobile_e164=mobile_e164,
+            password_hash=hash_password(password),
+            role=UserRole.MODERATOR,
+            status=UserStatus.APPROVED,
+            is_campus_member=True,
+            is_18_or_older=True,
+            created_at=datetime.now(timezone.utc),
+            approved_at=datetime.now(timezone.utc),
+        )
+        session.add(u)
+        session.commit()
+        print(f"created moderator id={u.id} mobile={u.mobile_e164}")
+    return 0
 
 
 if __name__ == "__main__":

@@ -22,6 +22,10 @@ SESSION_USER_ID: Final[str] = "uid"
 SESSION_ROLE: Final[str] = "role"
 SESSION_CSRF: Final[str] = "csrf"
 SESSION_CREATED: Final[str] = "iat"
+# Pre-session: a signed cookie that carries only a CSRF token, used to
+# protect the sign-up form before the user exists. Routes that allow
+# unauthenticated users must check CSRF against this cookie.
+SESSION_PRE: Final[str] = "pre"
 
 # The session cookie is signed with itsdangerous.URLSafeTimedSerializer.
 DEFAULT_SECRET: Final[str] = "change-me-to-a-long-random-string-at-least-32-chars"

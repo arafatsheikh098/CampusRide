@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ t('auth.signin.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('auth.signin.title', lang) }}</h1>
+  {% if error %}<p class="cr-error">{{ t(error, lang) }}</p>{% endif %}
+  <form class="cr-form" method="post" action="/auth/signin">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <label>{{ t('auth.signin.mobile', lang) }}
+      <input name="mobile" required placeholder="01712345678">
+    </label>
+    <label>{{ t('auth.signin.password', lang) }}
+      <input name="password" type="password" required>
+    </label>
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('auth.signin.submit', lang) }}</button>
+      <a class="cr-btn cr-btn--ghost" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
