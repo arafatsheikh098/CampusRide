@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ t('trips.post.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('trips.post.title', lang) }}</h1>
+  {% if form_error %}<p class="cr-error">{{ t('form.' ~ form_error, lang) }}</p>{% endif %}
+  <form class="cr-form" method="post" action="/trips/new">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <label>{{ t('trips.post.from', lang) }}
+      <select name="from_place_id" required>
+        {% for p in places %}<option value="{{ p.id }}">{{ p.name }} — {{ p.group_label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ t('trips.post.to', lang) }}
+      <select name="to_place_id" required>
+        {% for p in places %}<option value="{{ p.id }}">{{ p.name }} — {{ p.group_label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ t('trips.post.earliest', lang) }}
+      <input name="earliest" type="datetime-local" required>
+    </label>
+    <label>{{ t('trips.post.latest', lang) }}
+      <input name="latest" type="datetime-local" required>
+    </label>
+    <label>{{ t('trips.post.seats', lang) }}
+      <input name="seats" type="number" min="1" max="6" value="1" required>
+    </label>
+    <label>{{ t('trips.post.cost', lang) }}
+      <input name="cost_per_seat_paisa" type="number" min="0" value="0">
+    </label>
+    <label>{{ t('trips.post.note', lang) }}
+      <input name="note" type="text" maxlength="150">
+    </label>
+    <label>{{ t('trips.post.recurrence', lang) }}
+      <select name="recurrence_kind" id="rec">
+        <option value="one_off">{{ t('trips.post.recurrence.one_off', lang) }}</option>
+        <option value="weekly">{{ t('trips.post.recurrence.weekly', lang) }}</option>
+      </select>
+    </label>
+    <fieldset id="weekly-fields" style="display:none">
+      <legend>{{ t('trips.post.weekdays', lang) }}</legend>
+      {% set wd = [('0','Mon'),('1','Tue'),('2','Wed'),('3','Thu'),('4','Fri'),('5','Sat'),('6','Sun')] %}
+      {% for v,label in wd %}
+        <label class="cr-check"><input type="checkbox" name="weekdays" value="{{ v }}"> {{ label }}</label>
+      {% endfor %}
+      <label>{{ t('trips.post.end_date', lang) }}
+        <input name="series_end" type="date">
+      </label>
+    </fieldset>
+    {% if settings.women_only_trips and me.women_only_eligible %}
+    <label class="cr-check">
+      <input type="checkbox" name="women_only" value="on">
+      <span>{{ t('trips.post.women_only', lang) }}</span>
+    </label>
+    {% endif %}
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('common.submit', lang) }}</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block body_extra %}<script src="/static/js/trip-form.js" defer></script>{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ t('trips.detail.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('trips.detail.title', lang) }} #{{ trip.id }}</h1>
+  <p>
+    <strong>{{ from_place.name }}</strong>
+    ({{ from_place.group_label }})
+    &rarr;
+    <strong>{{ to_place.name }}</strong>
+    ({{ to_place.group_label }})
+  </p>
+  <p>{{ t('trips.detail.driver', lang) }}: <strong>{{ driver.full_name }}</strong></p>
+  {% if trip.driver_id == me.id and trip.vehicle_description %}
+    <p>{{ t('driver.verify.vehicle', lang) }}: {{ trip.vehicle_description }}</p>
+  {% endif %}
+  <p>{{ t('trips.post.seats', lang) }}: {{ trip.seats_offered }}</p>
+  {% if trip.note %}<p>{{ t('trips.post.note', lang) }}: {{ trip.note }}</p>{% endif %}
+  {% if trip.women_only %}<p class="cr-badge cr-badge--pending">{{ t('trips.post.women_only', lang) }}</p>{% endif %}
+  <p class="cr-notice">{{ t('trips.detail.emergency', lang).replace('{number}', settings.emergency_number) }}</p>
+  <p class="cr-notice">{{ t('trips.detail.not_safety', lang) }}</p>
+
+  <h2 class="cr-h2">{{ t('trips.detail.title', lang) }} — instances</h2>
+  <table class="cr-table">
+    <thead><tr>
+      <th>{{ t('trips.post.earliest', lang) }}</th>
+      <th>{{ t('trips.detail.seats_left', lang) }}</th>
+      <th>{{ t('common.save', lang) }}</th>
+    </tr></thead>
+    <tbody>
+      {% for inst in instances %}
+      <tr>
+        <td>{{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+        <td>{{ trip.seats_offered - inst.seats_taken }}</td>
+        <td>
+          {% if trip.driver_id == me.id and inst.status.value == 'active' %}
+          <form method="post" action="/trips/{{ trip.id }}/instances/{{ inst.id }}/cancel" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('trips.detail.cancel_instance', lang) }}</button>
+          </form>
+          {% else %}
+            {{ inst.status.value }}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
