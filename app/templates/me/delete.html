@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ t('me.delete.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('me.delete.title', lang) }}</h1>
+  <p>{{ t('me.delete.lede', lang) }}</p>
+  <p class="cr-notice">{{ t('trips.detail.not_safety', lang) }}</p>
+  <form method="post" action="/me/delete" class="cr-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <label for="confirm">{{ t('me.delete.confirm', lang) }}</label>
+    <input id="confirm" name="confirm" type="text" autocomplete="off" required>
+    {% if form_error %}
+      <p class="cr-error">{{ t(form_error, lang) }}</p>
+    {% endif %}
+    <button class="cr-btn cr-btn--danger" type="submit">{{ t('me.delete.submit', lang) }}</button>
+  </form>
+</section>
+{% endblock %}

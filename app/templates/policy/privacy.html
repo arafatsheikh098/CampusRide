@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t('policy.privacy.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('policy.privacy.title', lang) }}</h1>
+  <p>{{ body }}</p>
+  <p class="cr-notice">{{ t('trips.detail.not_safety', lang) }}</p>
+  <p class="cr-notice">{{ t('trips.detail.emergency', lang).replace('{number}', settings.emergency_number) }}</p>
+  {% if me is not none and me.status.value == 'approved' %}
+    <p><a class="cr-btn cr-btn--danger" href="/me/delete">{{ t('me.delete.title', lang) }}</a></p>
+  {% endif %}
+</section>
+{% endblock %}
