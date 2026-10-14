@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ t('trips.list.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('trips.list.title', lang) }}</h1>
+  {% if not me.driver_verified %}
+    <p>{{ t('driver.not_verified', lang) }}</p>
+  {% else %}
+  <p><a class="cr-btn cr-btn--primary" href="/trips/new">{{ t('trips.post.title', lang) }}</a></p>
+  {% endif %}
+  {% if not trips %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead><tr>
+      <th>{{ t('trips.post.from', lang) }}</th>
+      <th>{{ t('trips.post.to', lang) }}</th>
+      <th>{{ t('trips.post.recurrence', lang) }}</th>
+      <th>{{ t('common.save', lang) }}</th>
+    </tr></thead>
+    <tbody>
+      {% for tr in trips %}
+      <tr>
+        <td>{{ tr.from_place_id }}</td>
+        <td>{{ tr.to_place_id }}</td>
+        <td>{{ t('trips.post.recurrence.' ~ tr.recurrence_kind.value, lang) }}</td>
+        <td><a class="cr-btn cr-btn--ghost" href="/trips/{{ tr.id }}">{{ t('common.save', lang) }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}
