@@ -15,8 +15,8 @@ from app.main import create_app
 
 
 @pytest.fixture()
-def settings() -> Settings:
-    return Settings(
+def settings(monkeypatch) -> Settings:
+    s = Settings(
         app_env="development",
         secret_key="test-secret-key-32-characters-long-yes",
         database_url="sqlite:///:memory:",
@@ -36,6 +36,24 @@ def settings() -> Settings:
         women_only_trips=False,
         demo_mode=False,
     )
+    import app.config as cfg
+
+    cfg.get_settings.cache_clear()
+    # Patch every module that did `from .config import get_settings` so the
+    # test settings are visible throughout the app.
+    import app.auth
+    import app.main
+    import app.security
+    import app.routes.auth as ra
+    import app.routes.moderation as rm
+    import app.routes.profile as rp
+    import app.cli as cli_mod
+    import app.worker as worker_mod
+    for mod in (cfg, app.auth, app.main, app.security, ra, rm, rp, cli_mod, worker_mod):
+        monkeypatch.setattr(mod, "get_settings", lambda: s, raising=False)
+    # app.security uses `_config.get_settings`; also patch `_config`.
+    monkeypatch.setattr(app.security, "_config", cfg, raising=False)
+    return s
 
 
 @pytest.fixture()
@@ -60,5 +78,7 @@ def client(settings, engine) -> TestClient:
 
 @pytest.fixture()
 def db_session(engine) -> Session:
-    with Session(engine) as s:
+    from app.db import make_session_factory
+    factory = make_session_factory(engine)
+    with factory() as s:
         yield s

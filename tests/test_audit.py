@@ -1,14 +1,15 @@
 """Audit log writer sanity (used by every later milestone; cheap to test in M1)."""
 from __future__ import annotations
 
-from sqlmodel import Session, select
+from sqlmodel import select
+from app.db import make_session_factory
 
 from app.audit import write
 from app.models.audit import AuditLog
 
 
 def test_audit_writes_row(engine) -> None:
-    with Session(engine) as s:
+    with make_session_factory(engine)() as s:
         write(
             s,
             actor_id=None,

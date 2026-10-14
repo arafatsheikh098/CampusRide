@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from app.db import make_session_factory
 
 from app.models.heartbeat import Heartbeat
 
@@ -19,7 +19,7 @@ def test_health_degrades_without_heartbeat(client: TestClient, engine) -> None:
 
 
 def test_health_ok_with_fresh_heartbeat(client: TestClient, engine) -> None:
-    with Session(engine) as s:
+    with make_session_factory(engine)() as s:
         s.add(Heartbeat(worker_id="test-worker", last_seen=datetime.now(timezone.utc)))
         s.commit()
     r = client.get("/health")

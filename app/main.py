@@ -10,19 +10,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import AsyncIterator
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from itsdangerous import BadSignature, URLSafeTimedSerializer
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, pass_context, select_autoescape
 from sqlmodel import Session, select
 
 from .config import Settings, get_settings
-from .db import get_engine
+from .db import get_engine, get_session
 from .i18n import t as _t
 from .models.heartbeat import Heartbeat
 from .security import (
     SESSION_CSRF,
+    SESSION_PRE,
     SESSION_ROLE,
     SESSION_USER_ID,
     assert_safe_secret_key,
@@ -49,7 +50,41 @@ _env.filters["t"] = _jinja_t
 
 
 def render(template: str, /, **ctx) -> str:
+    # Provide safe defaults so child templates can reference `me` and
+    # `csrf` without every route having to pass them.
+    ctx.setdefault("me", None)
+    ctx.setdefault("csrf", "")
     return _env.get_template(template).render(**ctx)
+
+
+def _csrf_from_request(request: Request) -> str:
+    """Return the CSRF token stored in the user's session cookie (or in the
+    pre-session cookie used by the sign-up form)."""
+    raw = request.cookies.get(COOKIE_NAME) or request.cookies.get("cr_pre")
+    if not raw:
+        return ""
+    s = get_settings()
+    data = read_session_cookie(s.secret_key, raw)
+    if not data:
+        return ""
+    return str(data.get(SESSION_CSRF) or "")
+
+
+@pass_context
+def csrf_token(ctx) -> str:
+    """Read the CSRF token from the current request's session cookies.
+    Returns "" if there is no request or no session. Routes can also
+    pass `csrf_token="..."` in the render context to override this.
+    """
+    req = ctx.get("request")
+    if req is None:
+        return ""
+    return _csrf_from_request(req)
+
+
+# Backwards-compatible name. New code should use `csrf_token()`.
+_env.globals["csrf_token"] = csrf_token
+_env.globals["csrf"] = csrf_token
 
 
 # --- Session cookie helpers -----------------------------------------------
@@ -59,15 +94,22 @@ COOKIE_NAME = "cr_session"
 
 
 def _serializer(secret: str) -> URLSafeTimedSerializer:
-    return URLSafeTimedSerializer(secret, salt="campusride-session", signer_kwargs={"key": secret})
+    # Use a derived HMAC key so that rotating the SECRET_KEY invalidates
+    # every existing session, but the cookie payload itself is not raw-keyed.
+    derived = (secret + ":campusride").encode("utf-8")
+    return URLSafeTimedSerializer(derived, salt="campusride-session")
 
 
 def make_session_cookie(secret: str, user_id: int, role: str, csrf: str) -> str:
     s = _serializer(secret)
     return s.dumps(
         {SESSION_USER_ID: user_id, SESSION_ROLE: role, SESSION_CSRF: csrf},
-        max_age=_SESSION_MAX_AGE,
     )
+
+
+def make_pre_session_cookie(secret: str, csrf: str) -> str:
+    s = _serializer(secret)
+    return s.dumps({SESSION_PRE: True, SESSION_CSRF: csrf})
 
 
 def read_session_cookie(secret: str, value: str) -> dict | None:
@@ -80,6 +122,10 @@ def read_session_cookie(secret: str, value: str) -> dict | None:
     if not isinstance(data, dict):
         return None
     return data
+
+
+# Backwards-compatible re-export of the pre-session key.
+SESSION_PRE_KEY = SESSION_PRE
 
 
 # --- /health --------------------------------------------------------------
@@ -114,7 +160,26 @@ def _worker_heartbeat_age_seconds() -> float | None:
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     assert_safe_secret_key()
-    yield
+    # Optionally run the heartbeat worker in this process. Tests turn this
+    # off so they don't spawn background threads.
+    worker_task = None
+    if app.state.settings.run_worker_in_process:
+        import asyncio
+        from .worker import run_async
+
+        async def _loop() -> None:
+            await asyncio.to_thread(run_async)
+
+        worker_task = asyncio.create_task(_loop())
+    try:
+        yield
+    finally:
+        if worker_task is not None:
+            worker_task.cancel()
+            try:
+                await worker_task
+            except Exception:
+                pass
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -149,9 +214,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse(body, status_code=200 if healthy else 503)
 
     @app.get("/", include_in_schema=False)
-    def home(request: Request) -> HTMLResponse:
+    def home(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
         lang = _resolve_lang(request, s)
-        return HTMLResponse(render("home.html", lang=lang, settings=s, request=request))
+        from .auth import current_user
+        me = current_user(request, session)
+        return HTMLResponse(
+            render("home.html", lang=lang, settings=s, request=request, me=me),
+        )
 
     @app.exception_handler(404)
     async def _not_found(request: Request, exc):  # type: ignore[no-untyped-def]

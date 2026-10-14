@@ -32,7 +32,19 @@ def run() -> None:
 
     signal.signal(signal.SIGINT, _stop)
     signal.signal(signal.SIGTERM, _stop)
+    _run_loop(wid, stop, s)
 
+
+def run_async() -> None:
+    """In-process variant of the heartbeat loop. No signal handlers — the
+    caller (FastAPI lifespan) is in charge of stopping it."""
+    s = get_settings()
+    wid = _worker_id()
+    stop = {"v": False}
+    _run_loop(wid, stop, s)
+
+
+def _run_loop(wid: str, stop: dict, s) -> None:
     while not stop["v"]:
         try:
             with Session(get_engine()) as sess:

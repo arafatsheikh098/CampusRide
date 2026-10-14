@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ t('auth.recovery.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('auth.recovery.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('auth.recovery.help', lang) }}</p>
+  <p class="cr-ok">{{ t('auth.recovery.done', lang) }}</p>
+</section>
+{% endblock %}

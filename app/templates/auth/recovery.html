@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ t('auth.recovery.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('auth.signup.pending', lang) }}</h1>
+  <p class="cr-lede">{{ t('auth.recovery.help', lang) }}</p>
+  <ul class="cr-codes">
+    {% for c in codes %}<li><code>{{ c }}</code></li>{% endfor %}
+  </ul>
+  <p class="cr-notice">{{ t('auth.recovery.done', lang) }}</p>
+  <div class="cr-actions">
+    <a class="cr-btn cr-btn--primary" href="/">{{ t('nav.home', lang) }}</a>
+  </div>
+</section>
+{% endblock %}

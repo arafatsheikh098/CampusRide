@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ t('auth.signup.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('auth.signup.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('home.lede', lang) }}</p>
+  {% if form_error %}
+    <p class="cr-error">{{ t(form_error, lang) }}</p>
+  {% endif %}
+  <form class="cr-form" method="post" action="/auth/signup">
+    <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+    <label>{{ t('auth.signup.full_name', lang) }}
+      <input name="full_name" required value="{{ form_values.full_name|default('') }}">
+    </label>
+    <label>{{ t('auth.signup.department', lang) }}
+      <input name="department" required value="{{ form_values.department|default('') }}">
+    </label>
+    <label>{{ t('auth.signup.batch', lang) }}
+      <input name="batch_or_session" required value="{{ form_values.batch_or_session|default('') }}">
+    </label>
+    <label>{{ t('auth.signup.mobile', lang) }}
+      <input name="mobile" required placeholder="01712345678" value="{{ form_values.mobile|default('') }}">
+      <span class="cr-help">{{ t('auth.signup.mobile.help', lang) }}</span>
+    </label>
+    <label>{{ t('auth.signup.password', lang) }}
+      <input name="password" type="password" required minlength="8">
+    </label>
+    <label>{{ t('auth.signup.confirm', lang) }}
+      <input name="confirm_password" type="password" required minlength="8">
+    </label>
+    <label class="cr-check">
+      <input type="checkbox" name="is_campus_member" value="on">
+      <span>{{ t('auth.signup.is_campus', lang) }}</span>
+    </label>
+    <label class="cr-check">
+      <input type="checkbox" name="is_18_or_older" value="on">
+      <span>{{ t('auth.signup.is_adult', lang) }}</span>
+    </label>
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('auth.signup.submit', lang) }}</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
