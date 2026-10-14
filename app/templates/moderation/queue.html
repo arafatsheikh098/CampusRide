@@ -31,6 +31,65 @@
     </tbody>
   </table>
   {% endif %}
+
+  <h2 class="cr-h2">{{ t('moderation.queue.reports', lang) }}</h2>
+  {% if not reports %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead><tr><th>#</th><th>{{ t('reports.reason', lang) }}</th><th>{{ t('common.save', lang) }}</th></tr></thead>
+    <tbody>
+      {% for r in reports %}
+      <tr>
+        <td>#{{ r.id }}</td>
+        <td>{{ t('reports.reason.' ~ r.reason.value, lang) }}</td>
+        <td><a class="cr-btn cr-btn--ghost" href="/moderation/reports/{{ r.id }}">{{ t('common.save', lang) }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <h2 class="cr-h2">{{ t('moderation.queue.last_minute', lang) }}</h2>
+  {% if not last_minute %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead><tr><th>#</th><th>{{ t('bookings.cancelled', lang) }}</th></tr></thead>
+    <tbody>
+      {% for b in last_minute %}
+      <tr>
+        <td>#{{ b.id }}</td>
+        <td>{{ b.decided_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <h2 class="cr-h2">{{ t('moderation.queue.post_trip_problems', lang) }}</h2>
+  {% if not post_trip_problems %}
+    <p class="cr-ok">—</p>
+  {% else %}
+  <table class="cr-table">
+    <thead><tr><th>#</th><th>{{ t('bookings.title', lang) }}</th><th>{{ t('common.save', lang) }}</th></tr></thead>
+    <tbody>
+      {% for c in post_trip_problems %}
+      <tr>
+        <td>#{{ c.id }}</td>
+        <td>{{ c.booking_id }}</td>
+        <td>
+          <form method="post" action="/moderation/post_trip/{{ c.id }}/resolve" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('moderation.action.resolve', lang) }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   <p>
     <a class="cr-btn cr-btn--ghost" href="/moderation/places">{{ t('places.moderate.title', lang) }}</a>
   </p>

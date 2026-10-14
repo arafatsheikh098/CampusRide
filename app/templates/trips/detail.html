@@ -10,7 +10,7 @@
     <strong>{{ to_place.name }}</strong>
     ({{ to_place.group_label }})
   </p>
-  <p>{{ t('trips.detail.driver', lang) }}: <strong>{{ driver.full_name }}</strong></p>
+  <p>{{ t('trips.detail.driver', lang) }}: <strong>{{ (driver.full_name or '').split()[0] if not my_accepted_booking else driver.full_name }}</strong></p>
   {% if trip.driver_id == me.id and trip.vehicle_description %}
     <p>{{ t('driver.verify.vehicle', lang) }}: {{ trip.vehicle_description }}</p>
   {% endif %}
@@ -19,6 +19,30 @@
   {% if trip.women_only %}<p class="cr-badge cr-badge--pending">{{ t('trips.post.women_only', lang) }}</p>{% endif %}
   <p class="cr-notice">{{ t('trips.detail.emergency', lang).replace('{number}', settings.emergency_number) }}</p>
   <p class="cr-notice">{{ t('trips.detail.not_safety', lang) }}</p>
+
+  {% if my_accepted_booking %}
+    <div class="cr-card">
+      <h2 class="cr-h2">{{ t('contact.title', lang) }}</h2>
+      <ul class="cr-list">
+        <li><strong>{{ t('contact.first_name', lang) }}:</strong> {{ (my_accepted_booking.other.full_name or '').split()[0] }}</li>
+        <li><strong>{{ t('contact.department', lang) }}:</strong> {{ my_accepted_booking.other.department }}</li>
+        <li><strong>{{ t('contact.mobile', lang) }}:</strong> {{ my_accepted_booking.other.mobile_e164 }}</li>
+        {% if my_accepted_booking.other.vehicle_description %}
+          <li><strong>{{ t('contact.vehicle', lang) }}:</strong> {{ my_accepted_booking.other.vehicle_description }}</li>
+        {% endif %}
+        {% if my_accepted_booking.other.vehicle_plate %}
+          <li><strong>{{ t('contact.plate', lang) }}:</strong> {{ my_accepted_booking.other.vehicle_plate }}</li>
+        {% endif %}
+      </ul>
+      {% if me.id != trip.driver_id %}
+      <form method="post" action="/trips/{{ trip.id }}/instances/{{ my_accepted_booking.booking.trip_instance_id }}/trusted-link" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+        <button class="cr-btn cr-btn--primary" type="submit">{{ t('trusted.button', lang) }}</button>
+      </form>
+      {% endif %}
+      <a class="cr-btn cr-btn--ghost" href="/reports/new?target_user_id={{ my_accepted_booking.other.id }}&amp;target_trip_id={{ trip.id }}">{{ t('reports.button', lang) }}</a>
+    </div>
+  {% endif %}
 
   <h2 class="cr-h2">{{ t('trips.detail.title', lang) }} — instances</h2>
   <table class="cr-table">

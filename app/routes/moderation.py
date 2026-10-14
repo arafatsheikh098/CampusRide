@@ -12,7 +12,10 @@ from ..auth import current_user, require_csrf, require_moderator
 from ..config import get_settings
 from ..db import get_session
 from ..main import render
+from ..models.booking import Booking, BookingStatus
 from ..models.place import Place
+from ..models.trip import Trip, TripInstance, TripStatus
+from ..models.trust import PostTripCheck, PostTripAnswer, Report
 from ..models.user import User, UserStatus
 
 router = APIRouter(prefix="/moderation", tags=["moderation"])
@@ -40,6 +43,19 @@ def queue(request: Request, session: Session = Depends(get_session)) -> HTMLResp
     pending = session.exec(
         select(User).where(User.status == UserStatus.PENDING).order_by(User.created_at)
     ).all()
+    reports = session.exec(
+        select(Report).where(Report.resolved == False).order_by(Report.created_at)  # noqa: E712
+    ).all()
+    last_minute = session.exec(
+        select(Booking).where(Booking.last_minute_cancel == True).order_by(  # noqa: E712
+            Booking.decided_at.desc()
+        )
+    ).all()
+    post_trip_problems = session.exec(
+        select(PostTripCheck).where(
+            PostTripCheck.answer == PostTripAnswer.PROBLEM,
+        ).order_by(PostTripCheck.created_at)
+    ).all()
     # Pull the CSRF token from the session cookie so the forms can render it.
     from ..main import read_session_cookie
     data = read_session_cookie(s.secret_key, request.cookies.get("cr_session", ""))
@@ -51,6 +67,9 @@ def queue(request: Request, session: Session = Depends(get_session)) -> HTMLResp
             settings=s,
             request=request,
             pending=pending,
+            reports=reports,
+            last_minute=last_minute,
+            post_trip_problems=post_trip_problems,
             me=me,
             csrf=csrf,
         )
@@ -394,4 +413,140 @@ def account_detail(
             lang=lang, settings=s, request=request, me=me, target=target,
         )
     )
+
+
+# --- Reports, last-minute cancellations, post-trip problems ---------------
+
+
+@router.post("/reports/{report_id}/resolve")
+def reports_resolve(
+    report_id: int,
+    request: Request,
+    csrf_token: str | None = Form(None),
+    session: Session = Depends(get_session),
+) -> RedirectResponse:
+    me = current_user(request, session)
+    require_moderator(me)
+    require_csrf(request, csrf_token)
+    rep = session.get(Report, report_id)
+    if rep is None:
+        raise HTTPException(status_code=404)
+    if rep.resolved:
+        return RedirectResponse(f"/moderation/reports/{rep.id}", status_code=303)
+    rep.resolved = True
+    write(
+        session,
+        actor_id=me.id, actor_label=me.full_name,
+        action="report.resolve",
+        target_kind="report", target_id=rep.id,
+        target_label=rep.reason.value,
+    )
+    session.commit()
+    return RedirectResponse(f"/moderation/reports/{rep.id}", status_code=303)
+
+
+@router.get("/reports/{report_id}", response_class=HTMLResponse)
+def report_detail(
+    report_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> HTMLResponse:
+    me = current_user(request, session)
+    if me is None or me.role.value != "moderator" or me.status != UserStatus.APPROVED:
+        raise HTTPException(status_code=404)
+    rep = session.get(Report, report_id)
+    if rep is None:
+        raise HTTPException(status_code=404)
+    reporter = session.get(User, rep.reporter_id)
+    target_user = session.get(User, rep.target_user_id) if rep.target_user_id else None
+    target_trip = session.get(Trip, rep.target_trip_id) if rep.target_trip_id else None
+    lang = _lang(request)
+    s = get_settings()
+    return HTMLResponse(
+        render(
+            "moderation/report.html",
+            lang=lang, settings=s, request=request, me=me,
+            report=rep, reporter=reporter,
+            target_user=target_user, target_trip=target_trip,
+        )
+    )
+
+
+@router.post("/trips/{trip_id}/remove")
+def trips_remove(
+    trip_id: int,
+    request: Request,
+    csrf_token: str | None = Form(None),
+    session: Session = Depends(get_session),
+) -> RedirectResponse:
+    me = current_user(request, session)
+    require_moderator(me)
+    require_csrf(request, csrf_token)
+    trip = session.get(Trip, trip_id)
+    if trip is None:
+        raise HTTPException(status_code=404)
+    instances = session.exec(
+        select(TripInstance).where(TripInstance.trip_id == trip.id)
+    ).all()
+    bookings = session.exec(
+        select(Booking).where(
+            Booking.driver_id == trip.driver_id,
+            Booking.status.in_(
+                [BookingStatus.PENDING, BookingStatus.ACCEPTED]
+            ),
+        )
+    ).all()
+    inst_ids = {i.id for i in instances}
+    related = [b for b in bookings if b.trip_instance_id in inst_ids]
+    # Cancel every future booked instance and free its seat.
+    for inst in instances:
+        if inst.status == TripStatus.ACTIVE:
+            inst.status = TripStatus.CANCELLED
+            inst.cancelled_at = datetime.now(timezone.utc)
+            inst.cancelled_by_id = me.id
+    for b in related:
+        was_accepted = b.status == BookingStatus.ACCEPTED
+        b.status = BookingStatus.CANCELLED_BY_DRIVER
+        b.decided_at = datetime.now(timezone.utc)
+        b.last_minute_cancel = True
+        if was_accepted:
+            inst = next((i for i in instances if i.id == b.trip_instance_id), None)
+            if inst is not None:
+                inst.seats_taken = max(0, inst.seats_taken - 1)
+                inst.locked = False
+    write(
+        session,
+        actor_id=me.id, actor_label=me.full_name,
+        action="trip.remove",
+        target_kind="trip", target_id=trip.id,
+        target_label=f"#{trip.id}",
+        detail=f"driver_id={trip.driver_id} affected_bookings={len(related)}",
+    )
+    session.commit()
+    return RedirectResponse("/moderation", status_code=303)
+
+
+@router.post("/post_trip/{check_id}/resolve")
+def post_trip_resolve(
+    check_id: int,
+    request: Request,
+    csrf_token: str | None = Form(None),
+    session: Session = Depends(get_session),
+) -> RedirectResponse:
+    me = current_user(request, session)
+    require_moderator(me)
+    require_csrf(request, csrf_token)
+    check = session.get(PostTripCheck, check_id)
+    if check is None:
+        raise HTTPException(status_code=404)
+    write(
+        session,
+        actor_id=me.id, actor_label=me.full_name,
+        action="post_trip.resolve",
+        target_kind="post_trip_check", target_id=check.id,
+        target_label=f"#{check.id}",
+    )
+    # No DB field for handled; the audit row is the record.
+    session.commit()
+    return RedirectResponse("/moderation", status_code=303)
 

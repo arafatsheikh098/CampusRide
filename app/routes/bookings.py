@@ -34,13 +34,14 @@ from ..db import get_session
 from ..main import render
 from ..models.booking import Booking, BookingStatus
 from ..models.trip import Trip, TripInstance, TripStatus
-from ..models.trust import Block
+from ..models.trust import Block, PostTripAnswer, PostTripCheck
 from ..models.user import User, UserStatus
 from ..notifications import (
     notify_booking_cancelled,
     notify_booking_decision,
     notify_booking_request,
 )
+from ..reveal import post_trip_check_available
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
@@ -154,12 +155,21 @@ def list_my_bookings(
             select(User).where(User.id.in_(driver_ids))
         ).all():
             drivers[u.id] = u
+    # Post-trip check status per booking for this viewer.
+    checks: dict[int, PostTripCheck] = {}
+    for chk in session.exec(
+        select(PostTripCheck).where(PostTripCheck.responder_id == me.id)
+    ).all():
+        checks[chk.booking_id] = chk
+    trusted_token = request.query_params.get("trusted_token", "")
+    reported = request.query_params.get("reported", "")
     return HTMLResponse(
         render(
             "bookings/list.html",
             lang=lang, settings=s, request=request, me=me,
             bookings=bookings, instances=instances, trips=trips,
-            drivers=drivers,
+            drivers=drivers, checks=checks,
+            trusted_token=trusted_token, reported=reported,
         )
     )
 
@@ -416,3 +426,56 @@ def cancel_booking_by_driver(
     return RedirectResponse(
         url=f"/trips/{trip.id if trip else 0}", status_code=303,
     )
+
+
+@router.post("/{booking_id}/check")
+def post_trip_check(
+    booking_id: int,
+    request: Request,
+    answer: str = Form(...),
+    note: str = Form(""),
+    csrf_token: str | None = Form(None),
+    session: Session = Depends(get_session),
+) -> RedirectResponse:
+    """Both parties can answer the post-trip check after the trip time.
+    The check is private; only "problem" answers surface to moderators."""
+    me = _approved_member_or_none(request, session)
+    if me is None:
+        raise HTTPException(status_code=404)
+    require_csrf(request, csrf_token)
+    b = _load_booking_or_404(session, booking_id)
+    if me.id not in (b.rider_id, b.driver_id):
+        raise HTTPException(status_code=403)
+    if answer not in ("ok", "problem"):
+        raise HTTPException(status_code=400, detail="bad_answer")
+    inst = session.get(TripInstance, b.trip_instance_id)
+    if inst is None:
+        raise HTTPException(status_code=404)
+    if not post_trip_check_available(inst.depart_at, _now_utc()):
+        raise HTTPException(status_code=400, detail="not_yet")
+    existing = session.exec(
+        select(PostTripCheck).where(
+            PostTripCheck.booking_id == b.id,
+            PostTripCheck.responder_id == me.id,
+        )
+    ).first()
+    if existing is not None:
+        return RedirectResponse("/bookings", status_code=303)
+    check = PostTripCheck(
+        booking_id=b.id,
+        responder_id=me.id,
+        answer=PostTripAnswer(answer),
+        note=note.strip()[:400] or None,
+        created_at=_now_utc(),
+    )
+    session.add(check)
+    audit_write(
+        session,
+        actor_id=me.id, actor_label=me.full_name,
+        action="post_trip.check",
+        target_kind="booking", target_id=b.id,
+        target_label=f"#{b.id}",
+        detail=answer,
+    )
+    session.commit()
+    return RedirectResponse("/bookings", status_code=303)
