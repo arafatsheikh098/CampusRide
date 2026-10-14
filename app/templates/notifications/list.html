@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ t('notifications.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('notifications.title', lang) }}
+    {% if unread %}<span class="cr-badge cr-badge--pending">{{ unread }} {{ t('notifications.unread', lang) }}</span>{% endif %}
+  </h1>
+  {% if not notifications %}
+    <p class="cr-ok">{{ t('notifications.empty', lang) }}</p>
+  {% else %}
+    <form method="post" action="/notifications/read-all">
+      <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+      <button class="cr-btn cr-btn--ghost" type="submit">{{ t('notifications.mark_all_read', lang) }}</button>
+    </form>
+    <table class="cr-table">
+      <thead><tr>
+        <th></th>
+        <th>{{ t('notifications.body', lang) }}</th>
+        <th>{{ t('notifications.when', lang) }}</th>
+        <th>{{ t('common.save', lang) }}</th>
+      </tr></thead>
+      <tbody>
+      {% for n in notifications %}
+        <tr class="{% if not n.read %}cr-unread{% endif %}">
+          <td>
+            {% if not n.read %}<span class="cr-dot" aria-label="{{ t('notifications.unread', lang) }}"></span>{% endif %}
+          </td>
+          <td>
+            {% if n.link %}<a href="{{ n.link }}">{{ n.body }}</a>{% else %}{{ n.body }}{% endif %}
+          </td>
+          <td>{{ n.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+          <td>
+            {% if not n.read %}
+            <form method="post" action="/notifications/{{ n.id }}/read" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+              <button class="cr-btn cr-btn--ghost" type="submit">{{ t('notifications.mark_read', lang) }}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>
+{% endblock %}

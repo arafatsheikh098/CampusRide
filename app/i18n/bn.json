@@ -242,5 +242,19 @@
   "moderation.report.created": "তৈরি হয়েছে",
   "moderation.report.resolved": "সমাধান হয়েছে",
   "nav.blocks": "ব্লক",
-  "nav.safety": "নিরাপত্তা"
+  "nav.safety": "নিরাপত্তা",
+  "nav.telegram": "টেলিগ্রাম",
+  "notifications.mark_read": "পড়া হয়েছে",
+  "notifications.mark_all_read": "সব পড়া হয়েছে",
+  "notifications.body": "বার্তা",
+  "notifications.when": "সময়",
+  "notifications.kind.trip_reminder": "যাত্রার স্মরণীকা",
+  "telegram.title": "টেলিগ্রাম বিজ্ঞপ্তি",
+  "telegram.lede": "টেলিগ্রামে যাত্রার স্মরণীকা পান। আমরা একটি একবার-ব্যবহারযোগ্য কোড দিই; আপনি বটকে পাঠান, বট তখন আপনার চ্যাট আইডি জানে।",
+  "telegram.disabled": "এই ডিপ্লয়মেন্টে টেলিগ্রাম বিজ্ঞপ্তি চালু নেই।",
+  "telegram.linked": "আপনার টেলিগ্রাম সংযুক্ত আছে।",
+  "telegram.unlink": "টেলিগ্রাম সংযোগ বিচ্ছিন্ন",
+  "telegram.get_code": "একবার-ব্যবহারযোগ্য কোড নিন",
+  "telegram.code_title": "বটকে এটি পাঠান",
+  "telegram.code_notice": "কোডটি ১৫ মিনিটের জন্য বৈধ। পাঠানোর পর বট আপনার চ্যাট আইডি জানবে এবং আমরা সেখানে স্মরণীকা পাঠাব।"
 }
