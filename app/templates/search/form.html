@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ t('search.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-grid">
+  <h1 class="cr-h1">{{ t('search.title', lang) }}</h1>
+  <p class="cr-lede">{{ t('search.lede', lang) }}</p>
+
+  {% if form_error %}<p class="cr-error">{{ t(form_error, lang) }}</p>{% endif %}
+
+  <form class="cr-form" method="post" action="/search">
+    <label>{{ t('search.field.from', lang) }}
+      <select name="from_place_id" required>
+        {% for p in places %}
+          <option value="{{ p.id }}"
+            {% if form_values.from_place_id == p.id %}selected{% endif %}>
+            {{ p.name }} — {{ p.group_label }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>{{ t('search.field.to', lang) }}
+      <select name="to_place_id" required>
+        {% for p in places %}
+          <option value="{{ p.id }}"
+            {% if form_values.to_place_id == p.id %}selected{% endif %}>
+            {{ p.name }} — {{ p.group_label }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>{{ t('search.field.earliest', lang) }}
+      <input name="earliest" type="datetime-local" required
+        value="{{ form_values.earliest or '' }}">
+    </label>
+    <label>{{ t('search.field.latest', lang) }}
+      <input name="latest" type="datetime-local" required
+        value="{{ form_values.latest or '' }}">
+    </label>
+    <div class="cr-actions">
+      <button class="cr-btn cr-btn--primary" type="submit">{{ t('search.submit', lang) }}</button>
+    </div>
+  </form>
+
+  {% if results is not none %}
+    <h2 class="cr-h2">{{ t('search.results', lang) }}</h2>
+    {% if not results %}
+      <p class="cr-ok">{{ t('search.empty', lang) }}</p>
+    {% else %}
+      <table class="cr-table">
+        <thead>
+          <tr>
+            <th>{{ t('search.field.from', lang) }}</th>
+            <th>{{ t('search.field.to', lang) }}</th>
+            <th>{{ t('trips.post.earliest', lang) }}</th>
+            <th>{{ t('trips.detail.seats_left', lang) }}</th>
+            <th>{{ t('trips.post.cost', lang) }}</th>
+            <th>{{ t('common.save', lang) }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+            <tr>
+              <td>{{ r.from_place.name }} <small class="cr-muted">({{ r.from_place.group_label }})</small></td>
+              <td>{{ r.to_place.name }} <small class="cr-muted">({{ r.to_place.group_label }})</small></td>
+              <td>{{ r.trip.earliest_departure.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+              <td>{{ r.seats_left }}</td>
+              <td>{{ r.trip.cost_per_seat_paisa }}</td>
+              <td>
+                <span class="cr-badge cr-badge--ok">{{ t(r.reason_key, lang) }}</span>
+                <a class="cr-btn cr-btn--ghost" href="/trips/{{ r.trip.id }}">{{ t('search.show_detail', lang) }}</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}
