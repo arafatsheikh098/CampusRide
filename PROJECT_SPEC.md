@@ -1,0 +1,40 @@
+PROJECT: CampusRide
+PURPOSE: People from the same campus find each other for regular or one-off commutes. A driver (someone with a vehicle and spare seats) posts a trip; riders request seats; the driver accepts; contact details and safety information are revealed only after acceptance. Matching suggests compatible trips by route and time. Moderators keep the community verified and respond to reports.
+
+ROLES
+- Member: an approved campus user. Can be a rider, a driver, or both.
+- Driver-verified member: a member a moderator has marked as having checked their vehicle and license in person. Only driver-verified members can post trips. The app stores only the flag, the date and a short vehicle description, never license numbers or documents.
+- Moderator: approves accounts and driver status, handles reports, can suspend users.
+
+IN SCOPE
+F1 Accounts with moderator approval: sign-up (full name, department, batch or session, mobile number, password, checkbox "I am a student or staff member of this campus", checkbox "I am 18 or older"). Accounts are pending until a moderator approves them after a real-world check. Argon2 passwords (argon2-cffi), signed session cookie (HttpOnly, SameSite=Lax, Secure in production), CSRF on every state-changing request, login rate limit in the database, 10 single-use recovery codes shown once and stored hashed (no email), moderators created by CLI, Bangladesh mobile number validation and normalization (+8801XXXXXXXXX), suspension takes effect immediately.
+F2 Places and routes: moderator-managed places (campus gates, halls, departments, common pickup points, named neighbourhoods) each with a group label so nearby places can be treated as adjacent. No GPS.
+F3 Driver verification: a moderator marks a member as driver-verified with a vehicle description (max 80, for example "white sedan, 4 seats") and an optional plate shown only to accepted riders and the rider's trusted contact. Moderators can revoke driver status at any time.
+F4 Trips: a driver posts a trip: from place, to place, departure time window (earliest and latest, max 30 minutes wide), seats offered (1 to 6), suggested cost per seat (integer paisa, informational only and capped by a setting), optional note (max 150, no URLs or phone numbers), a recurrence (one-off, or weekly on selected weekdays until an end date). The system generates dated trip instances (rolling 14-day horizon) and each instance can be cancelled individually. Past instances are never rewritten when the series is edited.
+F5 Ride requests and matching: a rider searches or posts a request (from place, to place, desired time window, date or recurring). A pure matching function returns compatible trip instances: same destination, pickup place the same or in the same group, time windows overlapping within a tolerance (default 15 minutes), seats available, trip not cancelled, driver not blocked by the rider and vice versa. Results are ranked deterministically (exact pickup first, then smaller time difference, then more seats, then trip id). Women-only trips: when WOMEN_ONLY_TRIPS is enabled, a moderator can mark members as eligible after an in-person check, and a trip flagged women-only is visible to and bookable only by eligible members; the app stores only an eligibility boolean.
+F6 Seat booking: a rider asks for a seat on a trip instance; the driver accepts or declines; accepted seats reduce availability; a trip can never be overbooked, including under concurrent requests; either side can cancel with a short reason, and cancellations inside a configurable last-minute window (default 2 hours) are recorded and shown to moderators. A rider can hold at most 3 active bookings per day and 10 pending requests.
+F7 Contact and safety reveal: before acceptance neither side sees the other's phone number. After acceptance both see each other's first name, department and mobile number; the rider also sees the vehicle description and plate. The rider can generate a "trusted contact link": a read-only page (random token of at least 128 bits, stored hashed, expires 2 hours after the trip window ends) showing route, time, driver first name and vehicle description. No live tracking. The app shows the local emergency number from settings on trip pages and states that it is not a safety service.
+F8 Trust and moderation: report button on users and trips with reasons; users can block each other (blocked pairs never match or see each other's trips); moderator queues for pending accounts, driver requests, reports and last-minute cancellation patterns; suspend, revoke driver status and remove trips; every moderator action, acceptance, reveal and cancellation is written to an audit log. After a trip, both sides can answer a private "all good / there was a problem" check; problem answers go to the moderator queue. No public ratings.
+F9 Notifications: in-app notifications with unread count (new request, accepted, declined, cancelled, trip reminder 1 hour before); optional Telegram notifications when TELEGRAM_BOT_TOKEN is set, linked with a one-time code, secret-token-authenticated webhook, generic text (never names, numbers or places beyond the departure time), all disabled cleanly when unset. Reminders use a database-backed job queue with dedupe keys and a worker (separate process `python -m app.worker`, or in-process with RUN_WORKER_IN_PROCESS=true) with a Postgres advisory lock so only one worker runs and a heartbeat shown in /health.
+F10 Privacy and operations: data minimization; trips and bookings older than RETENTION_DAYS (default 90) are purged (`python -m app.cli purge`); delete-my-data; English and Bangla UI with identical dictionary keys; GET /health; security headers (CSP without inline scripts, X-Content-Type-Options, Referrer-Policy, frame-ancestors none); custom 404/500 pages; member cap per campus (default 200); DEMO_MODE with a banner and fake data; idempotent demo seed.
+
+OUT OF SCOPE
+Payments or fare calculation, live location or tracking, maps or routing, ratings and reviews, chat, ride-hailing or any commercial service, background checks, insurance, in-app SOS, email, SMS, multiple campuses, anything not listed above.
+
+ALLOWED STACK
+Python 3.12; FastAPI; uvicorn; SQLModel; Alembic; psycopg[binary]; pydantic-settings; Jinja2; python-multipart; argon2-cffi; httpx (Telegram Bot API only); zoneinfo (standard library); vendored HTMX (eval disabled); pytest, pytest-playwright, httpx, freezegun, hypothesis; ruff; Docker, docker compose; GitHub Actions.
+
+GLOBAL ACCEPTANCE CRITERIA
+G1 docker compose up --build runs web and worker; a fresh clone works from the README; /health shows the worker heartbeat.
+G2 A trip can never be overbooked, even with 20 concurrent seat requests on Postgres.
+G3 Mobile numbers, plates and the trusted-contact data never appear to anyone before acceptance, and after acceptance only to the two parties (tests scan every response and notification).
+G4 Pending, rejected and suspended users cannot access any member page; suspension applies to existing sessions immediately.
+G5 Only driver-verified members can post trips, and only women-only-eligible members can see or book women-only trips (tampered-input tests).
+G6 Blocked pairs never match, never see each other's trips, and cannot book each other (tests).
+G7 The trusted-contact link works with no login, exposes only route, time, driver first name and vehicle description, and expires on schedule (frozen time).
+G8 Every state-changing route rejects missing CSRF and missing session (route-discovery test).
+G9 The English and Bangla dictionaries have identical keys.
+G10 CI is green on PostgreSQL.
+
+MILESTONES
+M1 Foundation, jobs table and i18n scaffold; M2 Accounts, moderator approval and security baseline; M3 Places, driver verification and eligibility; M4 Trips and recurrence; M5 Matching engine; M6 Seat booking; M7 Contact reveal, trusted-contact link and trust and safety; M8 Notifications, reminders and worker; M9 Privacy operations, seed, Bangla UI and end-to-end tests.
