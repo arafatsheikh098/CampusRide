@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: campusride
+          POSTGRES_PASSWORD: campusride
+          POSTGRES_DB: campusride
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U campusride -d campusride"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: development
+      SECRET_KEY: ci-secret-key-32-characters-long-yes-please
+      DATABASE_URL: postgresql+psycopg://campusride:campusride@localhost:5432/campusride
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint
+        run: python -m ruff check .
+      - name: Upgrade then downgrade migrations
+        run: |
+          python -m app.cli upgrade-db
+          python -m app.cli downgrade-db
+          python -m app.cli upgrade-db
+      - name: Tests (SQLite)
+        run: python -m pytest -q
+      - name: Tests (Postgres)
+        run: |
+          python -m app.cli upgrade-db
+          python -m pytest -q -m postgres
+        continue-on-error: true

@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: campusride
+      POSTGRES_PASSWORD: campusride
+      POSTGRES_DB: campusride
+    volumes:
+      - cr_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campusride -d campusride"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    environment:
+      APP_ENV: development
+      SECRET_KEY: dev-secret-please-change-in-production-32chars
+      DATABASE_URL: postgresql+psycopg://campusride:campusride@db:5432/campusride
+      DEFAULT_LANG: en
+      SUPPORTED_LANGS: en,bn
+      CAMPUS_NAME: North Campus
+      CAMPUS_TIMEZONE: Asia/Dhaka
+      EMERGENCY_NUMBER: "999"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python -m app.cli upgrade-db &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  worker:
+    build: .
+    environment:
+      APP_ENV: development
+      SECRET_KEY: dev-secret-please-change-in-production-32chars
+      DATABASE_URL: postgresql+psycopg://campusride:campusride@db:5432/campusride
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "-m", "app.worker"]
+
+volumes:
+  cr_pgdata:

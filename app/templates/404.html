@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}404 — {{ t('app.title', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-center">
+  <h1 class="cr-h1">404</h1>
+  <p class="cr-lede">{{ t('common.error', lang) }}</p>
+  <a class="cr-btn cr-btn--primary" href="/">{{ t('nav.home', lang) }}</a>
+</section>
+{% endblock %}

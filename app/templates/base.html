@@ -1,0 +1,69 @@
+{# Base layout. No inline scripts; CSP-safe. #}
+<!doctype html>
+<html lang="{{ lang }}" data-theme="{{ 'dark' if request.cookies.get('cr_theme') == 'dark' else 'light' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}{{ t('app.title', lang) }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="cr">
+  <a class="cr-skip" href="#main">{{ t('common.back') }}</a>
+
+  <header class="cr-topbar" role="banner">
+    <div class="cr-topbar__inner">
+      <a class="cr-brand" href="/" aria-label="{{ t('app.title', lang) }}">
+        <span class="cr-brand__mark" aria-hidden="true"></span>
+        <span class="cr-brand__name">{{ t('app.title', lang) }}</span>
+      </a>
+      <nav class="cr-nav" aria-label="primary">
+        <a href="/search">{{ t('nav.search', lang) }}</a>
+        <a href="/trips">{{ t('nav.trips', lang) }}</a>
+        <a href="/bookings">{{ t('nav.bookings', lang) }}</a>
+        <a href="/notifications">{{ t('nav.notifications', lang) }}</a>
+        <a href="/moderation" data-role="moderator">{{ t('nav.admin', lang) }}</a>
+      </nav>
+      <div class="cr-tools">
+        <button id="cr-theme-toggle" class="cr-iconbtn" type="button"
+                aria-label="{{ t('nav.theme.toggle', lang) }}"
+                hx-post="/me/theme" hx-vals='{"next":"{{ request.url.path }}"}' hx-swap="none">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
+            <path fill="currentColor" d="M12 3v2m0 14v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2m14 0h2M5.6 18.4 7 17m10-10 1.4-1.4M12 7a5 5 0 100 10 5 5 0 000-10z"/>
+          </svg>
+        </button>
+        <button id="cr-lang-toggle" class="cr-iconbtn" type="button"
+                aria-label="{{ t('nav.lang.toggle', lang) }}"
+                hx-post="/me/lang" hx-vals='{"next":"{{ request.url.path }}"}' hx-swap="none">
+          <span class="cr-iconbtn__text">{{ 'EN' if lang == 'en' else 'বাং' }}</span>
+        </button>
+        <a class="cr-btn cr-btn--ghost" href="/auth/signin">{{ t('nav.signin', lang) }}</a>
+        <a class="cr-btn" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
+      </div>
+    </div>
+  </header>
+
+  {% if settings.demo_mode %}
+  <div class="cr-banner" role="status">{{ t('demo.banner', lang) }}</div>
+  {% endif %}
+
+  <main id="main" class="cr-main" tabindex="-1">
+    {% block main %}{% endblock %}
+  </main>
+
+  <footer class="cr-footer" role="contentinfo">
+    <div class="cr-footer__inner">
+      <span>{{ t('footer.copyright', lang) }}</span>
+      <span class="cr-footer__sep">·</span>
+      <a href="/policy/privacy">{{ t('footer.privacy', lang) }}</a>
+      <span class="cr-footer__sep">·</span>
+      <span>{{ t('footer.emergency', lang) }}: <strong>{{ settings.emergency_number }}</strong></span>
+    </div>
+  </footer>
+
+  <script src="/static/vendor/htmx/htmx.min.js" defer></script>
+  <script src="/static/js/app.js" defer></script>
+  {% block body_extra %}{% endblock %}
+</body>
+</html>
