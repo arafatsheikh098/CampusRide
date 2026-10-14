@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ t('app.title', lang) }} — {{ t('app.tagline', lang) }}{% endblock %}
+{% block main %}
+<section class="cr-hero">
+  <div class="cr-hero__copy">
+    <h1 class="cr-h1">{{ t('app.tagline', lang) }}</h1>
+    <p class="cr-lede">{{ t('home.lede', lang) }}</p>
+    <div class="cr-hero__cta">
+      <a class="cr-btn cr-btn--primary" href="/auth/signup">{{ t('home.get_started', lang) }}</a>
+      <a class="cr-btn cr-btn--ghost" href="/search">{{ t('nav.search', lang) }}</a>
+    </div>
+    <p class="cr-notice">{{ t('home.not_safety_service', lang) }}</p>
+  </div>
+  <div class="cr-hero__card" aria-hidden="true">
+    <div class="cr-card">
+      <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> Verified by moderators</div>
+      <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> Contact revealed only after acceptance</div>
+      <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> Trusted contact link with no tracking</div>
+      <div class="cr-card__row"><span class="cr-dot cr-dot--warn"></span> Cost sharing only, no payments</div>
+    </div>
+  </div>
+</section>
+{% endblock %}

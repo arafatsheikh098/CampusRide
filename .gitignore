@@ -1,0 +1,29 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- App state ---
+.env
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+.playwright/
+test-results/
+playwright-report/
+
+# --- Editor ---
+.idea/
+.vscode/
+.DS_Store
+
+# --- Build ---
+dist/
+build/
