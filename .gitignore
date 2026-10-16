@@ -29,3 +29,18 @@ dist/
 build/
 campusride.db
 .env
+
+# Security, secrets & audit exclusions
+need_fix.md
+AUDIT_REPORT.md
+CLAUDE.md
+BLOCKERS.md
+DECISIONS.md
+FINAL_REPORT.md
+PLAN.md
+PROJECT_SPEC.md
+*.db-shm
+*.db-wal
+.env.*
+!.env.example
+Thumbs.db

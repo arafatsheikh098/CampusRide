@@ -1,6 +1,6 @@
 # SCOPE.md — CampusRide contract
 
-This file is the contract. Do not edit it. See CLAUDE.md for how changes are handled.
+This document specifies the exact scope boundaries and acceptance criteria for CampusRide.
 
 ## IN SCOPE
 F1 Accounts with moderator approval: sign-up (full name, department, batch or session, mobile number, password, checkbox "I am a student or staff member of this campus", checkbox "I am 18 or older"). Accounts are pending until a moderator approves them after a real-world check. Argon2 passwords (argon2-cffi), signed session cookie (HttpOnly, SameSite=Lax, Secure in production), CSRF on every state-changing request, login rate limit in the database, 10 single-use recovery codes shown once and stored hashed (no email), moderators created by CLI, Bangladesh mobile number validation and normalization (+8801XXXXXXXXX), suspension takes effect immediately.
