@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlmodel import select
 
+from .auth import normalize_mobile
 from .config import get_settings
 from .db import get_engine, make_session_factory
 from .models.place import Place
@@ -52,12 +53,13 @@ def _get_or_create_user(s, *, mobile, name, dept, batch,
                        role=UserRole.MEMBER, status=UserStatus.APPROVED,
                        driver_verified=False, vehicle_description=None,
                        vehicle_plate=None):
-    existing = s.exec(select(User).where(User.mobile_e164 == mobile)).first()
+    norm_mobile = normalize_mobile(mobile)
+    existing = s.exec(select(User).where(User.mobile_e164 == norm_mobile)).first()
     if existing is not None:
         return existing
     u = User(
         full_name=name, department=dept, batch_or_session=batch,
-        mobile_e164=mobile,
+        mobile_e164=norm_mobile,
         password_hash=hash_password("changeme" if role == UserRole.MEMBER else "modpass1"),
         role=role, status=status,
         is_campus_member=True, is_18_or_older=True,
@@ -130,8 +132,9 @@ def seed() -> dict:
         ).first()
         if campus is not None and library is not None and dhanmondi is not None:
             for mobile, *_ in _DRIVERS:
+                norm = normalize_mobile(mobile)
                 driver = sess.exec(
-                    select(User).where(User.mobile_e164 == mobile)
+                    select(User).where(User.mobile_e164 == norm)
                 ).first()
                 if driver is None:
                     continue

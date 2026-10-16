@@ -26,6 +26,7 @@ in a fresh, unauthenticated context to prove the read-only flow.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,7 @@ except ImportError:  # pragma: no cover - documented prereq
 
 OUT = Path(__file__).resolve().parents[1] / "docs" / "screenshots"
 OUT.mkdir(parents=True, exist_ok=True)
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 
 # Seed users from app/seed.py.
 MOD_MOBILE = "01700000001"
@@ -93,14 +94,7 @@ def main() -> int:
         # 3. Booking detail (sign in as the rider, open first trip).
         print("→ rider opens a trip and books a seat")
         _signin(page, RIDER_MOBILE, RIDER_PASSWORD)
-        page.goto(f"{BASE_URL}/trips")
-        page.wait_for_load_state("networkidle")
-        # The first link on the list goes to /trips/{id}.
-        first = page.locator("a[href^='/trips/']").first
-        if first.count() == 0:
-            sys.stderr.write("no trips on /trips; did you run `python -m app.seed`?\n")
-            return 2
-        first.click()
+        page.goto(f"{BASE_URL}/trips/1")
         page.wait_for_load_state("networkidle")
         # Request a seat if there's a form; capture either way.
         req = page.locator('form[action$="/bookings/new"] button[type="submit"]')
@@ -118,12 +112,10 @@ def main() -> int:
         _signin(gen_page, RIDER_MOBILE, RIDER_PASSWORD)
         gen_page.goto(f"{BASE_URL}/bookings")
         gen_page.wait_for_load_state("networkidle")
-        form = gen_page.locator(
-            'form[action*="/trusted/new"], form[action*="trusted_contact"]'
-        ).first
+        form = gen_page.locator('form[action*="trusted-link"]').first
         token_url: str | None = None
         if form.count() > 0:
-            form.click()
+            form.locator('button[type="submit"]').click()
             gen_page.wait_for_load_state("networkidle")
             link = gen_page.locator('a[href*="/trusted/"]').first
             if link.count() > 0:
