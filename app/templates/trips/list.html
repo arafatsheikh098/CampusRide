@@ -1,15 +1,33 @@
 {% extends "base.html" %}
 {% block title %}{{ t('trips.list.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+
 {% block main %}
 <section class="cr-grid">
+  <div class="cr-hero__pill" style="margin-bottom: 0.75rem;">
+    <span>🚗 {{ t('nav.trips', lang) }}</span>
+  </div>
   <h1 class="cr-h1">{{ t('trips.list.title', lang) }}</h1>
+
   {% if not me.driver_verified %}
-    <p>{{ t('driver.not_verified', lang) }}</p>
+    <div class="cr-card" style="margin: 1.5rem 0; border-color: var(--accent-amber);">
+      <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚠️</div>
+      <p style="margin:0; font-weight:600;">{{ t('driver.not_verified', lang) }}</p>
+      <div style="margin-top: 1rem;">
+        <a class="cr-btn cr-btn--primary cr-btn--sm" href="/driver">{{ t('nav.drivers', lang) }} ➔</a>
+      </div>
+    </div>
   {% else %}
-  <p><a class="cr-btn cr-btn--primary" href="/trips/new">{{ t('trips.post.title', lang) }}</a></p>
+    <div style="margin: 1.25rem 0;">
+      <a class="cr-btn cr-btn--primary cr-btn--lg" href="/trips/new">+ {{ t('trips.post.title', lang) }}</a>
+    </div>
   {% endif %}
+
   {% if not trips %}
-    <p class="cr-ok">—</p>
+    <div class="cr-card" style="text-align: center; padding: 3rem 1.5rem; margin-top: 1.5rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛣️</div>
+      <p class="cr-ok" style="display:inline-block;">—</p>
+      <p class="cr-lede" style="margin-top: 0.5rem;">No trips posted yet.</p>
+    </div>
   {% else %}
   <table class="cr-table">
     <thead><tr>
@@ -21,10 +39,10 @@
     <tbody>
       {% for tr in trips %}
       <tr>
-        <td>{{ tr.from_place_id }}</td>
-        <td>{{ tr.to_place_id }}</td>
-        <td>{{ t('trips.post.recurrence.' ~ tr.recurrence_kind.value, lang) }}</td>
-        <td><a class="cr-btn cr-btn--ghost" href="/trips/{{ tr.id }}">{{ t('common.save', lang) }}</a></td>
+        <td><strong>Place #{{ tr.from_place_id }}</strong></td>
+        <td><strong>Place #{{ tr.to_place_id }}</strong></td>
+        <td><span class="cr-badge">{{ t('trips.post.recurrence.' ~ tr.recurrence_kind.value, lang) }}</span></td>
+        <td><a class="cr-btn cr-btn--ghost cr-btn--sm" href="/trips/{{ tr.id }}">{{ t('common.save', lang) }} ➔</a></td>
       </tr>
       {% endfor %}
     </tbody>

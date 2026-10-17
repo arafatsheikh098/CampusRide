@@ -219,9 +219,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def home(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
         lang = _resolve_lang(request, s)
         from .auth import current_user
+        from .models.place import Place
         me = current_user(request, session)
+        places = session.exec(select(Place).order_by(Place.group_label, Place.name)).all()
         return HTMLResponse(
-            render("home.html", lang=lang, settings=s, request=request, me=me),
+            render("home.html", lang=lang, settings=s, request=request, me=me, places=places),
         )
 
     @app.exception_handler(404)

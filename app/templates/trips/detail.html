@@ -1,32 +1,57 @@
 {% extends "base.html" %}
 {% block title %}{{ t('trips.detail.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+
 {% block main %}
 <section class="cr-grid">
-  <h1 class="cr-h1">{{ t('trips.detail.title', lang) }} #{{ trip.id }}</h1>
-  <p>
-    <strong>{{ from_place.name }}</strong>
-    ({{ from_place.group_label }})
-    &rarr;
-    <strong>{{ to_place.name }}</strong>
-    ({{ to_place.group_label }})
-  </p>
-  <p>{{ t('trips.detail.driver', lang) }}: <strong>{{ (driver.full_name or '').split()[0] if not my_accepted_booking else driver.full_name }}</strong></p>
-  {% if trip.driver_id == me.id and trip.vehicle_description %}
-    <p>{{ t('driver.verify.vehicle', lang) }}: {{ trip.vehicle_description }}</p>
-  {% endif %}
-  <p>{{ t('trips.post.seats', lang) }}: {{ trip.seats_offered }}</p>
-  {% if trip.note %}<p>{{ t('trips.post.note', lang) }}: {{ trip.note }}</p>{% endif %}
-  {% if trip.women_only %}<p class="cr-badge cr-badge--pending">{{ t('trips.post.women_only', lang) }}</p>{% endif %}
-  <p class="cr-notice">{{ t('trips.detail.emergency', lang).replace('{number}', settings.emergency_number) }}</p>
-  <p class="cr-notice">{{ t('trips.detail.not_safety', lang) }}</p>
+  <div class="cr-card" style="margin-bottom: 2rem; border-color: var(--border-glow);">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+      <h1 class="cr-h1" style="font-size: 1.85rem; margin: 0;">{{ t('trips.detail.title', lang) }} #{{ trip.id }}</h1>
+      {% if trip.women_only %}
+        <span class="cr-badge cr-badge--ok" style="font-size: 0.85rem;">🌸 {{ t('trips.post.women_only', lang) }}</span>
+      {% endif %}
+    </div>
+
+    <div class="cr-preview-route" style="margin: 1.25rem 0; font-size: 1.1rem;">
+      <div class="cr-preview-route__point">
+        <span class="cr-preview-route__name" style="font-size: 1.15rem;">📍 {{ from_place.name }}</span>
+        <span class="cr-preview-route__sub">{{ from_place.group_label }}</span>
+      </div>
+      <div class="cr-preview-route__arrow" style="font-size: 1.5rem;">➔</div>
+      <div class="cr-preview-route__point">
+        <span class="cr-preview-route__name" style="font-size: 1.15rem;">🏁 {{ to_place.name }}</span>
+        <span class="cr-preview-route__sub">{{ to_place.group_label }}</span>
+      </div>
+    </div>
+
+    <div class="cr-card__row">
+      <span>👤 {{ t('trips.detail.driver', lang) }}: <strong>{{ (driver.full_name or '').split()[0] if not my_accepted_booking else driver.full_name }}</strong></span>
+      {% if trip.driver_id == me.id and trip.vehicle_description %}
+        · <span>🚗 {{ t('driver.verify.vehicle', lang) }}: <em>{{ trip.vehicle_description }}</em></span>
+      {% endif %}
+      · <span>💺 {{ t('trips.post.seats', lang) }}: <strong>{{ trip.seats_offered }}</strong></span>
+    </div>
+
+    {% if trip.note %}
+      <div class="cr-notice" style="background: var(--bg-sunk); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--primary); margin: 0.75rem 0;">
+        <strong>{{ t('trips.post.note', lang) }}:</strong> {{ trip.note }}
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.25rem;">
+      <small class="cr-muted">🚨 {{ t('trips.detail.emergency', lang).replace('{number}', settings.emergency_number) }}</small>
+      <small class="cr-muted">🛡️ {{ t('trips.detail.not_safety', lang) }}</small>
+    </div>
+  </div>
 
   {% if my_accepted_booking %}
-    <div class="cr-card">
-      <h2 class="cr-h2">{{ t('contact.title', lang) }}</h2>
-      <ul class="cr-list">
+    <div class="cr-card" style="margin-bottom: 2rem; border-color: var(--success); background: var(--bg-elev);">
+      <h2 class="cr-h2" style="margin-top:0; color:var(--success); display:flex; align-items:center; gap:0.5rem;">
+        <span>🔓</span> {{ t('contact.title', lang) }}
+      </h2>
+      <ul class="cr-list" style="list-style: none; padding: 0; line-height: 1.8;">
         <li><strong>{{ t('contact.first_name', lang) }}:</strong> {{ (my_accepted_booking.other.full_name or '').split()[0] }}</li>
         <li><strong>{{ t('contact.department', lang) }}:</strong> {{ my_accepted_booking.other.department }}</li>
-        <li><strong>{{ t('contact.mobile', lang) }}:</strong> {{ my_accepted_booking.other.mobile_e164 }}</li>
+        <li><strong>{{ t('contact.mobile', lang) }}:</strong> <span style="font-weight:700; color:var(--primary);">{{ my_accepted_booking.other.mobile_e164 }}</span></li>
         {% if my_accepted_booking.other.vehicle_description %}
           <li><strong>{{ t('contact.vehicle', lang) }}:</strong> {{ my_accepted_booking.other.vehicle_description }}</li>
         {% endif %}
@@ -34,13 +59,15 @@
           <li><strong>{{ t('contact.plate', lang) }}:</strong> {{ my_accepted_booking.other.vehicle_plate }}</li>
         {% endif %}
       </ul>
-      {% if me.id != trip.driver_id %}
-      <form method="post" action="/trips/{{ trip.id }}/instances/{{ my_accepted_booking.booking.trip_instance_id }}/trusted-link" style="display:inline">
-        <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-        <button class="cr-btn cr-btn--primary" type="submit">{{ t('trusted.button', lang) }}</button>
-      </form>
-      {% endif %}
-      <a class="cr-btn cr-btn--ghost" href="/reports/new?target_user_id={{ my_accepted_booking.other.id }}&amp;target_trip_id={{ trip.id }}">{{ t('reports.button', lang) }}</a>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+        {% if me.id != trip.driver_id %}
+        <form method="post" action="/trips/{{ trip.id }}/instances/{{ my_accepted_booking.booking.trip_instance_id }}/trusted-link" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
+          <button class="cr-btn cr-btn--primary" type="submit">👨‍👩‍👧 {{ t('trusted.button', lang) }}</button>
+        </form>
+        {% endif %}
+        <a class="cr-btn cr-btn--ghost" href="/reports/new?target_user_id={{ my_accepted_booking.other.id }}&amp;target_trip_id={{ trip.id }}">{{ t('reports.button', lang) }}</a>
+      </div>
     </div>
   {% endif %}
 
@@ -54,22 +81,22 @@
     <tbody>
       {% for inst in instances %}
       <tr>
-        <td>{{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
-        <td>{{ trip.seats_offered - inst.seats_taken }}</td>
+        <td><strong>{{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</strong></td>
+        <td><span class="cr-badge cr-badge--ok">{{ trip.seats_offered - inst.seats_taken }} left</span></td>
         <td>
           {% if trip.driver_id == me.id and inst.status.value == 'active' %}
           <form method="post" action="/trips/{{ trip.id }}/instances/{{ inst.id }}/cancel" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-            <button class="cr-btn cr-btn--ghost" type="submit">{{ t('trips.detail.cancel_instance', lang) }}</button>
+            <button class="cr-btn cr-btn--ghost cr-btn--sm" type="submit">{{ t('trips.detail.cancel_instance', lang) }}</button>
           </form>
           {% elif trip.driver_id != me.id and inst.status.value == 'active' and (trip.seats_offered - inst.seats_taken) > 0 %}
           <form method="post" action="/bookings/new" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
             <input type="hidden" name="trip_instance_id" value="{{ inst.id }}">
-            <button class="cr-btn cr-btn--primary" type="submit">{{ t('trips.detail.request_seat', lang) }}</button>
+            <button class="cr-btn cr-btn--primary cr-btn--sm" type="submit">{{ t('trips.detail.request_seat', lang) }}</button>
           </form>
           {% else %}
-            {{ inst.status.value }}
+            <span class="cr-badge">{{ inst.status.value }}</span>
           {% endif %}
         </td>
       </tr>
@@ -78,7 +105,7 @@
   </table>
 
   {% if trip.driver_id == me.id and instance_bookings %}
-    <h2 class="cr-h2">{{ t('bookings.title', lang) }}</h2>
+    <h2 class="cr-h2" style="margin-top: 3rem;">{{ t('bookings.title', lang) }}</h2>
     <table class="cr-table">
       <thead>
         <tr>
@@ -91,14 +118,14 @@
       <tbody>
         {% for inst_id, items in instance_bookings.items() %}
           {% set inst = instances_by_id.get(inst_id) %}
-          <tr>
+          <tr style="background: var(--bg-sunk);">
             <td colspan="4">
-              <strong>{{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</strong>
+              <strong>📅 {{ inst.depart_at.strftime('%Y-%m-%d %H:%M') }} UTC</strong>
             </td>
           </tr>
           {% for b, rname in items %}
             <tr>
-              <td>#{{ b.id }}</td>
+              <td><strong>#{{ b.id }}</strong></td>
               <td>{{ rname or '—' }}</td>
               <td>
                 <span class="cr-badge cr-badge--{% if b.status.value == 'accepted' %}ok{% elif b.status.value == 'declined' %}rejected{% else %}pending{% endif %}">
@@ -109,16 +136,16 @@
                 {% if b.status.value == 'pending' %}
                 <form method="post" action="/bookings/{{ b.id }}/accept" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-                  <button class="cr-btn cr-btn--primary" type="submit">{{ t('bookings.accept', lang) }}</button>
+                  <button class="cr-btn cr-btn--primary cr-btn--sm" type="submit">{{ t('bookings.accept', lang) }}</button>
                 </form>
                 <form method="post" action="/bookings/{{ b.id }}/decline" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-                  <button class="cr-btn cr-btn--ghost" type="submit">{{ t('bookings.decline', lang) }}</button>
+                  <button class="cr-btn cr-btn--ghost cr-btn--sm" type="submit">{{ t('bookings.decline', lang) }}</button>
                 </form>
                 {% elif b.status.value == 'accepted' %}
                 <form method="post" action="/bookings/{{ b.id }}/driver_cancel" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-                  <button class="cr-btn cr-btn--ghost" type="submit">{{ t('bookings.cancel', lang) }}</button>
+                  <button class="cr-btn cr-btn--ghost cr-btn--sm" type="submit">{{ t('bookings.cancel', lang) }}</button>
                 </form>
                 {% endif %}
               </td>

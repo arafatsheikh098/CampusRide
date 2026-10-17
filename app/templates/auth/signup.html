@@ -1,44 +1,83 @@
 {% extends "base.html" %}
 {% block title %}{{ t('auth.signup.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+
 {% block main %}
-<section class="cr-grid">
-  <h1 class="cr-h1">{{ t('auth.signup.title', lang) }}</h1>
-  <p class="cr-lede">{{ t('home.lede', lang) }}</p>
+<div class="cr-auth-wrapper">
+  <div class="cr-auth-header">
+    <div class="cr-brand__mark" style="width: 44px; height: 44px; border-radius: 12px;">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/>
+        <circle cx="7.5" cy="14.5" r="1.5"/>
+        <circle cx="16.5" cy="14.5" r="1.5"/>
+      </svg>
+    </div>
+    <h1 class="cr-h1" style="font-size: 2rem; margin-bottom: 0.25rem;">{{ t('auth.signup.title', lang) }}</h1>
+    <p class="cr-lede" style="font-size: 0.95rem; margin-bottom: 0;">{{ t('home.lede', lang) }}</p>
+  </div>
+
   {% if form_error %}
     <p class="cr-error">{{ t(form_error, lang) }}</p>
   {% endif %}
-  <form class="cr-form" method="post" action="/auth/signup">
+
+  <form class="cr-form" method="post" action="/auth/signup" style="max-width: 100%;">
     <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
-    <label>{{ t('auth.signup.full_name', lang) }}
-      <input name="full_name" required value="{{ form_values.full_name|default('') }}">
+
+    <label>
+      <span>👤 {{ t('auth.signup.full_name', lang) }}</span>
+      <input name="full_name" required value="{{ form_values.full_name|default('') }}" placeholder="e.g. Tanvir Ahmed">
     </label>
-    <label>{{ t('auth.signup.department', lang) }}
-      <input name="department" required value="{{ form_values.department|default('') }}">
-    </label>
-    <label>{{ t('auth.signup.batch', lang) }}
-      <input name="batch_or_session" required value="{{ form_values.batch_or_session|default('') }}">
-    </label>
-    <label>{{ t('auth.signup.mobile', lang) }}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <label>
+        <span>🏛️ {{ t('auth.signup.department', lang) }}</span>
+        <input name="department" required value="{{ form_values.department|default('') }}" placeholder="e.g. CSE">
+      </label>
+
+      <label>
+        <span>🎓 {{ t('auth.signup.batch', lang) }}</span>
+        <input name="batch_or_session" required value="{{ form_values.batch_or_session|default('') }}" placeholder="e.g. 21 / 2021-22">
+      </label>
+    </div>
+
+    <label>
+      <span>📱 {{ t('auth.signup.mobile', lang) }}</span>
       <input name="mobile" required placeholder="01712345678" value="{{ form_values.mobile|default('') }}">
       <span class="cr-help">{{ t('auth.signup.mobile.help', lang) }}</span>
     </label>
-    <label>{{ t('auth.signup.password', lang) }}
-      <input name="password" type="password" required minlength="8">
-    </label>
-    <label>{{ t('auth.signup.confirm', lang) }}
-      <input name="confirm_password" type="password" required minlength="8">
-    </label>
-    <label class="cr-check">
-      <input type="checkbox" name="is_campus_member" value="on">
-      <span>{{ t('auth.signup.is_campus', lang) }}</span>
-    </label>
-    <label class="cr-check">
-      <input type="checkbox" name="is_18_or_older" value="on">
-      <span>{{ t('auth.signup.is_adult', lang) }}</span>
-    </label>
-    <div class="cr-actions">
-      <button class="cr-btn cr-btn--primary" type="submit">{{ t('auth.signup.submit', lang) }}</button>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <label>
+        <span>🔒 {{ t('auth.signup.password', lang) }}</span>
+        <input name="password" type="password" required minlength="8">
+      </label>
+
+      <label>
+        <span>🔒 {{ t('auth.signup.confirm', lang) }}</span>
+        <input name="confirm_password" type="password" required minlength="8">
+      </label>
+    </div>
+
+    <div style="background: var(--bg-sunk); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); display: grid; gap: 0.75rem;">
+      <label class="cr-check">
+        <input type="checkbox" name="is_campus_member" value="on">
+        <span>{{ t('auth.signup.is_campus', lang) }}</span>
+      </label>
+
+      <label class="cr-check">
+        <input type="checkbox" name="is_18_or_older" value="on">
+        <span>{{ t('auth.signup.is_adult', lang) }}</span>
+      </label>
+    </div>
+
+    <div class="cr-actions" style="margin-top: 0.5rem;">
+      <button class="cr-btn cr-btn--primary cr-btn--lg" type="submit" style="width: 100%;">
+        {{ t('auth.signup.submit', lang) }} ➔
+      </button>
+    </div>
+
+    <div style="text-align: center; margin-top: 0.5rem;">
+      <a class="cr-muted" href="/auth/signin">Already have an account? <strong>{{ t('nav.signin', lang) }}</strong></a>
     </div>
   </form>
-</section>
+</div>
 {% endblock %}

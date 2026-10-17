@@ -176,3 +176,7 @@ def seed() -> dict:
                 counts["instances"] += 1
         sess.commit()
     return counts
+
+
+if __name__ == "__main__":
+    print(seed())

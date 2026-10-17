@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}500 — {{ t('app.title', lang) }}{% endblock %}
 {% block main %}
-<section class="cr-center">
-  <h1 class="cr-h1">500</h1>
-  <p class="cr-lede">{{ t('common.error', lang) }}</p>
-  <a class="cr-btn cr-btn--primary" href="/">{{ t('nav.home', lang) }}</a>
-</section>
+<div class="cr-auth-wrapper" style="text-align: center; padding: 3rem 1.5rem;">
+  <div style="font-size: 3.5rem; margin-bottom: 1rem;">⚠️</div>
+  <h1 class="cr-h1" style="font-size: 3.5rem; margin-bottom: 0.5rem; font-weight: 900;">500</h1>
+  <p class="cr-lede" style="margin-bottom: 1.5rem;">{{ t('common.error', lang) }}</p>
+  <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+    <a class="cr-btn cr-btn--primary cr-btn--lg" href="/">{{ t('nav.home', lang) }} ➔</a>
+  </div>
+</div>
 {% endblock %}

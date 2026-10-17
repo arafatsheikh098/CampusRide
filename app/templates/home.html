@@ -1,23 +1,218 @@
 {% extends "base.html" %}
 {% block title %}{{ t('app.title', lang) }} — {{ t('app.tagline', lang) }}{% endblock %}
+
 {% block main %}
-<section class="cr-hero">
-  <div class="cr-hero__copy">
-    <h1 class="cr-h1">{{ t('app.tagline', lang) }}</h1>
-    <p class="cr-lede">{{ t('home.lede', lang) }}</p>
-    <div class="cr-hero__cta">
-      <a class="cr-btn cr-btn--primary" href="/auth/signup">{{ t('home.get_started', lang) }}</a>
-      <a class="cr-btn cr-btn--ghost" href="/search">{{ t('nav.search', lang) }}</a>
+<div class="cr-hero-wrapper">
+  <section class="cr-hero">
+    <div class="cr-hero__copy">
+      <div class="cr-hero__pill">
+        <span>{{ t('home.hero.badge', lang) }}</span>
+      </div>
+      <h1 class="cr-h1">
+        <span class="cr-gradient-text">{{ t('app.title', lang) }}</span> — {{ t('app.tagline', lang) }}
+      </h1>
+      <p class="cr-lede">{{ t('home.hero.subtitle', lang) }}</p>
+      
+      <div class="cr-hero__cta">
+        {% if me is none %}
+          <a class="cr-btn cr-btn--primary cr-btn--lg" href="/auth/signup">{{ t('home.get_started', lang) }}</a>
+          <a class="cr-btn cr-btn--lg" href="/auth/signin">{{ t('nav.signin', lang) }}</a>
+        {% elif me.status.value == 'approved' %}
+          <a class="cr-btn cr-btn--primary cr-btn--lg" href="/search">{{ t('home.hero.find_ride', lang) }}</a>
+          {% if me.driver_verified %}
+            <a class="cr-btn cr-btn--lg" href="/trips/new">{{ t('home.hero.offer_ride', lang) }}</a>
+          {% else %}
+            <a class="cr-btn cr-btn--lg" href="/driver">{{ t('nav.drivers', lang) }}</a>
+          {% endif %}
+        {% else %}
+          <span class="cr-badge cr-badge--pending">{{ t('auth.status.pending', lang) }}</span>
+        {% endif %}
+      </div>
+
+      <div class="cr-hero__routes">
+        <div class="cr-hero__routes-label">{{ t('home.hero.popular_routes', lang) }}</div>
+        <div class="cr-route-chips">
+          <button class="cr-route-chip" type="button" data-from="1" data-to="2">
+            <span>🏛️ Main Gate</span> ➔ <span>📚 Central Library</span>
+          </button>
+          <button class="cr-route-chip" type="button" data-from="3" data-to="4">
+            <span>🏢 Dormitories</span> ➔ <span>🔬 Science Annex</span>
+          </button>
+          <button class="cr-route-chip" type="button" data-from="5" data-to="6">
+            <span>🚇 Metro Station</span> ➔ <span>🎓 Curzon Hall</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="cr-notice"><small>🛡️ {{ t('home.not_safety_service', lang) }}</small></p>
     </div>
-    <p class="cr-notice">{{ t('home.not_safety_service', lang) }}</p>
+
+    <div class="cr-hero__visual">
+      <div class="cr-hero__image-card">
+        <img src="/static/img/hero.jpg" alt="University students sharing campus rides comfortably" loading="eager" width="600" height="338">
+      </div>
+
+      <div class="cr-preview-card" aria-label="Interactive Ride Preview">
+        <div class="cr-preview-header">
+          <div class="cr-preview-title">
+            <span>🚗</span>
+            <span>{{ t('home.preview.title', lang) }}</span>
+          </div>
+          <div class="cr-preview-tabs" role="tablist">
+            <button id="tab-rider" class="cr-preview-tab active" type="button">Rider</button>
+            <button id="tab-driver" class="cr-preview-tab" type="button">Driver</button>
+          </div>
+        </div>
+
+        <div class="cr-preview-route">
+          <div class="cr-preview-route__point">
+            <span id="preview-route-name" class="cr-preview-route__name">Main Gate ➔ Campus Library</span>
+            <span id="preview-meta-desc" class="cr-preview-route__sub">Departing 8:30 AM · 2 {{ t('home.preview.seats_left', lang) }} · 30 BDT</span>
+          </div>
+        </div>
+
+        <div class="cr-preview-meta">
+          <span class="cr-badge cr-badge--ok">✓ {{ t('home.preview.verified_driver', lang) }}</span>
+          <span class="cr-badge">🔒 {{ t('home.preview.privacy_active', lang) }}</span>
+          {% if me is not none and me.status.value == 'approved' %}
+            <a id="preview-action-btn" class="cr-btn cr-btn--primary cr-btn--sm" href="/search" style="margin-left:auto;">{{ t('home.preview.book_now', lang) }}</a>
+          {% else %}
+            <a id="preview-action-btn" class="cr-btn cr-btn--primary cr-btn--sm" href="/auth/signup" style="margin-left:auto;">{{ t('home.preview.book_now', lang) }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Key Pillars -->
+<section class="cr-stats-grid" aria-label="Platform Highlights">
+  <div class="cr-stat-card">
+    <div class="cr-stat-card__icon">🎓</div>
+    <div class="cr-stat-card__title">{{ t('home.stats.verified_badge', lang) }}</div>
+    <p class="cr-stat-card__desc">{{ t('home.stats.verified_desc', lang) }}</p>
   </div>
-  <div class="cr-hero__card" aria-hidden="true">
-    <div class="cr-card">
-      <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> Verified by moderators</div>
-      <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> Contact revealed only after acceptance</div>
-      <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> Trusted contact link with no tracking</div>
-      <div class="cr-card__row"><span class="cr-dot cr-dot--warn"></span> Cost sharing only, no payments</div>
+
+  <div class="cr-stat-card">
+    <div class="cr-stat-card__icon">🤝</div>
+    <div class="cr-stat-card__title">{{ t('home.stats.cost_badge', lang) }}</div>
+    <p class="cr-stat-card__desc">{{ t('home.stats.cost_desc', lang) }}</p>
+  </div>
+
+  <div class="cr-stat-card">
+    <div class="cr-stat-card__icon">🔒</div>
+    <div class="cr-stat-card__title">{{ t('home.stats.privacy_badge', lang) }}</div>
+    <p class="cr-stat-card__desc">{{ t('home.stats.privacy_desc', lang) }}</p>
+  </div>
+
+  <div class="cr-stat-card">
+    <div class="cr-stat-card__icon">👨‍👩‍👧</div>
+    <div class="cr-stat-card__title">{{ t('home.stats.trusted_badge', lang) }}</div>
+    <p class="cr-stat-card__desc">{{ t('home.stats.trusted_desc', lang) }}</p>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="cr-how-section">
+  <div class="cr-section-header">
+    <h2 class="cr-h2">{{ t('home.how.title', lang) }}</h2>
+    <p class="cr-lede">{{ t('home.how.subtitle', lang) }}</p>
+  </div>
+
+  <div class="cr-steps-grid">
+    <div class="cr-step-card">
+      <div class="cr-step-number">1</div>
+      <div class="cr-step-title">{{ t('home.how.step1_title', lang) }}</div>
+      <p class="cr-step-desc">{{ t('home.how.step1_desc', lang) }}</p>
+    </div>
+
+    <div class="cr-step-card">
+      <div class="cr-step-number">2</div>
+      <div class="cr-step-title">{{ t('home.how.step2_title', lang) }}</div>
+      <p class="cr-step-desc">{{ t('home.how.step2_desc', lang) }}</p>
+    </div>
+
+    <div class="cr-step-card">
+      <div class="cr-step-number">3</div>
+      <div class="cr-step-title">{{ t('home.how.step3_title', lang) }}</div>
+      <p class="cr-step-desc">{{ t('home.how.step3_desc', lang) }}</p>
     </div>
   </div>
+</section>
+
+<!-- Safety & Trust Banner -->
+<section class="cr-trust-banner">
+  <div class="cr-trust-banner__content">
+    <span class="cr-badge cr-badge--ok" style="margin-bottom: 0.75rem;">🛡️ Campus Safety First</span>
+    <h2 class="cr-h2" style="margin-top:0.25rem;">{{ t('home.features.title', lang) }}</h2>
+    <p class="cr-lede">{{ t('home.features.subtitle', lang) }}</p>
+    
+    <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> <strong>{{ t('home.features.nospam_title', lang) }}:</strong> {{ t('home.features.nospam_desc', lang) }}</div>
+    <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> <strong>{{ t('home.features.women_only_title', lang) }}:</strong> {{ t('home.features.women_only_desc', lang) }}</div>
+    <div class="cr-card__row"><span class="cr-dot cr-dot--ok"></span> <strong>{{ t('home.stats.privacy_badge', lang) }}:</strong> {{ t('home.stats.privacy_desc', lang) }}</div>
+    <div class="cr-card__row"><span class="cr-dot cr-dot--warn"></span> <strong>{{ t('home.stats.cost_badge', lang) }}:</strong> {{ t('home.stats.cost_desc', lang) }}</div>
+
+    <div style="margin-top: 1.5rem;">
+      <a class="cr-btn cr-btn--primary" href="/policy/privacy">{{ t('footer.privacy', lang) }}</a>
+    </div>
+  </div>
+
+  <div class="cr-trust-banner__image">
+    <img src="/static/img/safety.jpg" alt="Student verification and safety shield" loading="lazy" width="400" height="400">
+  </div>
+</section>
+
+<!-- Interactive FAQ Accordion -->
+<section class="cr-faq-section">
+  <div class="cr-section-header">
+    <h2 class="cr-h2">{{ t('home.faq.title', lang) }}</h2>
+  </div>
+
+  <div class="cr-faq-grid">
+    <div class="cr-faq-item open">
+      <button class="cr-faq-question" type="button">
+        <span>{{ t('home.faq.q1', lang) }}</span>
+        <span class="cr-faq-chevron">▾</span>
+      </button>
+      <div class="cr-faq-answer">
+        {{ t('home.faq.a1', lang) }}
+      </div>
+    </div>
+
+    <div class="cr-faq-item">
+      <button class="cr-faq-question" type="button">
+        <span>{{ t('home.faq.q2', lang) }}</span>
+        <span class="cr-faq-chevron">▾</span>
+      </button>
+      <div class="cr-faq-answer">
+        {{ t('home.faq.a2', lang) }}
+      </div>
+    </div>
+
+    <div class="cr-faq-item">
+      <button class="cr-faq-question" type="button">
+        <span>{{ t('home.faq.q3', lang) }}</span>
+        <span class="cr-faq-chevron">▾</span>
+      </button>
+      <div class="cr-faq-answer">
+        {{ t('home.faq.a3', lang) }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA Banner -->
+<section class="cr-cta-banner">
+  <h2>{{ t('home.cta.title', lang) }}</h2>
+  <p>{{ t('home.cta.subtitle', lang) }}</p>
+  {% if me is none %}
+    <a class="cr-btn cr-btn--lg" href="/auth/signup" style="background:#ffffff; color:#0f172a; border:none; font-weight:800;">
+      {{ t('home.get_started', lang) }} ➔
+    </a>
+  {% else %}
+    <a class="cr-btn cr-btn--lg" href="/search" style="background:#ffffff; color:#0f172a; border:none; font-weight:800;">
+      {{ t('home.hero.find_ride', lang) }} ➔
+    </a>
+  {% endif %}
 </section>
 {% endblock %}

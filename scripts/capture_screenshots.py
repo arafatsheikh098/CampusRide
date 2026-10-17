@@ -83,6 +83,14 @@ def main() -> int:
         page.wait_for_load_state("networkidle")
         _shoot(page, "01-home")
 
+        # 1b. Home (dark mode).
+        print("→ home (dark mode)")
+        page.emulate_media(color_scheme="dark")
+        page.goto(BASE_URL)
+        page.wait_for_load_state("networkidle")
+        _shoot(page, "01-home-dark")
+        page.emulate_media(color_scheme="light")
+
         # 2. Search results (signed in as a rider).
         print("→ sign in as rider, search Campus Gate → Dhanmondi 27")
         _signin(page, RIDER_MOBILE, RIDER_PASSWORD)
@@ -91,16 +99,34 @@ def main() -> int:
         _shoot(page, "02-search")
         _signout(context)
 
-        # 3. Booking detail (sign in as the rider, open first trip).
+        # 3. Booking detail (rider books a seat, driver accepts, capture contact reveal).
         print("→ rider opens a trip and books a seat")
         _signin(page, RIDER_MOBILE, RIDER_PASSWORD)
         page.goto(f"{BASE_URL}/trips/1")
         page.wait_for_load_state("networkidle")
-        # Request a seat if there's a form; capture either way.
+        # Request a seat if there's a form.
         req = page.locator('form[action$="/bookings/new"] button[type="submit"]')
         if req.count() > 0:
             req.first.click()
             page.wait_for_load_state("networkidle")
+        _signout(context)
+
+        # 3b. Sign in as driver Aisha to accept the rider's booking
+        drv_ctx = browser.new_context(viewport={"width": 1200, "height": 800})
+        drv_page = drv_ctx.new_page()
+        _signin(drv_page, "01700000010", "changeme")
+        drv_page.goto(f"{BASE_URL}/trips/1")
+        drv_page.wait_for_load_state("networkidle")
+        acc = drv_page.locator('form[action*="/accept"] button[type="submit"]')
+        if acc.count() > 0:
+            acc.first.click()
+            drv_page.wait_for_load_state("networkidle")
+        drv_ctx.close()
+
+        # Capture trip detail with contact revealed for the rider
+        _signin(page, RIDER_MOBILE, RIDER_PASSWORD)
+        page.goto(f"{BASE_URL}/trips/1")
+        page.wait_for_load_state("networkidle")
         _shoot(page, "03-booking")
         _signout(context)
 

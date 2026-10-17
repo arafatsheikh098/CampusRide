@@ -1,6 +1,11 @@
 # CampusRide
 
-Verified-student commute sharing for a single campus.
+**Verified-student commute sharing for a single campus.**
+
+<p align="center">
+  <a href="docs/screenshots/01-home.png"><img src="docs/screenshots/01-home.png" alt="CampusRide Light Mode" width="49%"></a>
+  <a href="docs/screenshots/01-home-dark.png"><img src="docs/screenshots/01-home-dark.png" alt="CampusRide Dark Mode" width="49%"></a>
+</p>
 
 CampusRide is a small FastAPI service that lets students offer and
 find shared rides between named pickup points. Every account is
@@ -133,26 +138,35 @@ Postgres-marked tests. It never mutates the source tree.
 
 ## Screenshots
 
-> Screenshots are produced by `scripts/capture_screenshots.py`
-> (Playwright) and land in `docs/screenshots/`. The script signs
-> in as the seed moderator, signs in as a rider, posts a trip,
-> accepts a booking, generates a trusted contact link, opens it
-> in an unauthenticated browser, and captures each step.
+> All screenshots are captured directly from the live application via Playwright (`scripts/capture_screenshots.py`) using seeded test data, and are stored in `docs/screenshots/`.
 
 <!-- screenshot-grid:begin -->
-| Home | Search results | Booking detail |
-|---|---|---|
-| ![Home](docs/screenshots/01-home.png) | ![Search](docs/screenshots/02-search.png) | ![Booking](docs/screenshots/03-booking.png) |
+### 🌓 Homepage (Light & Dark Theme)
 
-| Trusted contact (public) | Moderation queue | Notifications |
-|---|---|---|
-| ![Trusted](docs/screenshots/04-trusted.png) | ![Queue](docs/screenshots/05-queue.png) | ![Notifications](docs/screenshots/06-notifications.png) |
+| Light Theme | Dark Theme |
+|:---:|:---:|
+| [![Homepage Light](docs/screenshots/01-home.png)](docs/screenshots/01-home.png) | [![Homepage Dark](docs/screenshots/01-home-dark.png)](docs/screenshots/01-home-dark.png) |
+
+### 🔍 Search & Ride Booking
+
+| Find a Ride (Search & Quick Presets) | Booking Detail & Contact Reveal |
+|:---:|:---:|
+| [![Search](docs/screenshots/02-search.png)](docs/screenshots/02-search.png) | [![Booking Detail](docs/screenshots/03-booking.png)](docs/screenshots/03-booking.png) |
+
+### 🛡️ Safety & Platform Moderation
+
+| Read-Only Trusted Contact Link | Moderator Approval Queue |
+|:---:|:---:|
+| [![Trusted Contact](docs/screenshots/04-trusted.png)](docs/screenshots/04-trusted.png) | [![Moderation Queue](docs/screenshots/05-queue.png)](docs/screenshots/05-queue.png) |
+
+### 🔔 In-App Notifications
+
+| Live In-App Notification Stream |
+|:---:|
+| [![Notifications](docs/screenshots/06-notifications.png)](docs/screenshots/06-notifications.png) |
 <!-- screenshot-grid:end -->
 
-The placeholders above are HTML comments so the README renders
-cleanly even before the images are generated. See
-`docs/screenshots/README.md` for the full list and the exact steps
-each shot captures.
+See [`docs/screenshots/README.md`](docs/screenshots/README.md) for the full list, capture instructions, and what each shot demonstrates.
 
 ---
 

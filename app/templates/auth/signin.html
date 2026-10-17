@@ -1,22 +1,44 @@
 {% extends "base.html" %}
 {% block title %}{{ t('auth.signin.title', lang) }} — {{ t('app.title', lang) }}{% endblock %}
+
 {% block main %}
-<section class="cr-grid">
-  <h1 class="cr-h1">{{ t('auth.signin.title', lang) }}</h1>
-  {% if error %}<p class="cr-error">{{ t(error, lang) }}</p>{% endif %}
-  <form class="cr-form" method="post" action="/auth/signin">
+<div class="cr-auth-wrapper">
+  <div class="cr-auth-header">
+    <div class="cr-brand__mark" style="width: 44px; height: 44px; border-radius: 12px;">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/>
+        <circle cx="7.5" cy="14.5" r="1.5"/>
+        <circle cx="16.5" cy="14.5" r="1.5"/>
+      </svg>
+    </div>
+    <h1 class="cr-h1" style="font-size: 2rem; margin-bottom: 0.25rem;">{{ t('auth.signin.title', lang) }}</h1>
+    <p class="cr-lede" style="font-size: 0.95rem; margin-bottom: 0;">Welcome back to your campus commute network</p>
+  </div>
+
+  {% if error %}
+    <p class="cr-error">{{ t(error, lang) }}</p>
+  {% endif %}
+
+  <form class="cr-form" method="post" action="/auth/signin" style="max-width: 100%;">
     <input type="hidden" name="csrf_token" value="{{ csrf or csrf_token() }}">
     <input type="hidden" name="next" value="{{ next }}">
-    <label>{{ t('auth.signin.mobile', lang) }}
-      <input name="mobile" required placeholder="01712345678">
+
+    <label>
+      <span>📱 {{ t('auth.signin.mobile', lang) }}</span>
+      <input name="mobile" required placeholder="01712345678" autocomplete="tel">
     </label>
-    <label>{{ t('auth.signin.password', lang) }}
-      <input name="password" type="password" required>
+
+    <label>
+      <span>🔑 {{ t('auth.signin.password', lang) }}</span>
+      <input name="password" type="password" required autocomplete="current-password">
     </label>
-    <div class="cr-actions">
-      <button class="cr-btn cr-btn--primary" type="submit">{{ t('auth.signin.submit', lang) }}</button>
+
+    <div class="cr-actions" style="margin-top: 1rem;">
+      <button class="cr-btn cr-btn--primary cr-btn--lg" type="submit" style="flex: 1;">
+        {{ t('auth.signin.submit', lang) }}
+      </button>
       <a class="cr-btn cr-btn--ghost" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
     </div>
   </form>
-</section>
+</div>
 {% endblock %}

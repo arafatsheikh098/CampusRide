@@ -14,11 +14,27 @@
 
   <header class="cr-topbar" role="banner">
     <div class="cr-topbar__inner">
+      <button id="cr-mobile-menu-btn" class="cr-mobile-toggle" type="button" aria-label="Toggle Navigation Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
       <a class="cr-brand" href="/" aria-label="{{ t('app.title', lang) }}">
-        <span class="cr-brand__mark" aria-hidden="true"></span>
+        <span class="cr-brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/>
+            <circle cx="7.5" cy="14.5" r="1.5"/>
+            <circle cx="16.5" cy="14.5" r="1.5"/>
+          </svg>
+        </span>
         <span class="cr-brand__name">{{ t('app.title', lang) }}</span>
+        <span class="cr-brand__badge">Campus Commute</span>
       </a>
-      <nav class="cr-nav" aria-label="primary">
+
+      <nav id="cr-nav-menu" class="cr-nav" aria-label="primary">
         <a href="/search">{{ t('nav.search', lang) }}</a>
         {% if me is not none and me.status.value == 'approved' %}
           <a href="/trips">{{ t('nav.trips', lang) }}</a>
@@ -33,11 +49,12 @@
           {% endif %}
         {% endif %}
       </nav>
+
       <div class="cr-tools">
         <button id="cr-theme-toggle" class="cr-iconbtn" type="button"
                 aria-label="{{ t('nav.theme.toggle', lang) }}"
                 hx-post="/me/theme" hx-vals='{"next":"{{ request.url.path }}"}' hx-swap="none">
-          <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
             <path fill="currentColor" d="M12 3v2m0 14v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2m14 0h2M5.6 18.4 7 17m10-10 1.4-1.4M12 7a5 5 0 100 10 5 5 0 000-10z"/>
           </svg>
         </button>
@@ -48,7 +65,7 @@
         </button>
         {% if me is none %}
           <a class="cr-btn cr-btn--ghost" href="/auth/signin">{{ t('nav.signin', lang) }}</a>
-          <a class="cr-btn" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
+          <a class="cr-btn cr-btn--primary" href="/auth/signup">{{ t('nav.signup', lang) }}</a>
         {% else %}
           <span class="cr-who" title="{{ me.full_name }}">{{ me.full_name }}</span>
           {% if me.status.value == 'pending' %}
@@ -77,11 +94,16 @@
 
   <footer class="cr-footer" role="contentinfo">
     <div class="cr-footer__inner">
-      <span>{{ t('footer.copyright', lang) }}</span>
-      <span class="cr-footer__sep">·</span>
-      <a href="/policy/privacy">{{ t('footer.privacy', lang) }}</a>
-      <span class="cr-footer__sep">·</span>
-      <span>{{ t('footer.emergency', lang) }}: <strong>{{ settings.emergency_number }}</strong></span>
+      <div class="cr-footer__links">
+        <span>{{ t('footer.copyright', lang) }}</span>
+        <span class="cr-footer__sep">·</span>
+        <a href="/policy/privacy">{{ t('footer.privacy', lang) }}</a>
+        <span class="cr-footer__sep">·</span>
+        <a href="/search">{{ t('nav.search', lang) }}</a>
+      </div>
+      <div class="cr-footer__emergency">
+        <span>{{ t('footer.emergency', lang) }}: <strong style="color:var(--danger)">{{ settings.emergency_number }}</strong></span>
+      </div>
     </div>
   </footer>
 
