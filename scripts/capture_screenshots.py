@@ -85,11 +85,13 @@ def main() -> int:
 
         # 1b. Home (dark mode).
         print("→ home (dark mode)")
-        page.emulate_media(color_scheme="dark")
-        page.goto(BASE_URL)
-        page.wait_for_load_state("networkidle")
-        _shoot(page, "01-home-dark")
-        page.emulate_media(color_scheme="light")
+        dark_ctx = browser.new_context(viewport={"width": 1200, "height": 800})
+        dark_ctx.add_cookies([{"name": "cr_theme", "value": "dark", "url": BASE_URL}])
+        dark_page = dark_ctx.new_page()
+        dark_page.goto(BASE_URL)
+        dark_page.wait_for_load_state("networkidle")
+        _shoot(dark_page, "01-home-dark")
+        dark_ctx.close()
 
         # 2. Search results (signed in as a rider).
         print("→ sign in as rider, search Campus Gate → Dhanmondi 27")
