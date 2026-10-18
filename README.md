@@ -140,13 +140,15 @@ Postgres-marked tests. It never mutates the source tree.
 > All screenshots are captured directly from the live application via Playwright (`scripts/capture_screenshots.py`) using seeded test data, and are stored in `docs/screenshots/`.
 
 <!-- screenshot-grid:begin -->
-| 🔍 Find a Ride (Search & Quick Presets) | 🎟️ Trip Booking & Contact Reveal |
+| ☀️ CampusRide Homepage (Light Mode) | 🌙 Obsidian Night Theme (Dark Mode) |
 |:---:|:---:|
+| [![Homepage Light](docs/screenshots/01-home.png)](docs/screenshots/01-home.png) | [![Homepage Dark](docs/screenshots/01-home-dark.png)](docs/screenshots/01-home-dark.png) |
+| **🔍 Find a Ride (Search & Quick Presets)** | **🎟️ Trip Booking & Contact Reveal** |
 | [![Search](docs/screenshots/02-search.png)](docs/screenshots/02-search.png) | [![Booking Detail](docs/screenshots/03-booking.png)](docs/screenshots/03-booking.png) |
 | **🛡️ Read-Only Trusted Contact Link** | **⚖️ Moderator Approval Queue** |
 | [![Trusted Contact](docs/screenshots/04-trusted.png)](docs/screenshots/04-trusted.png) | [![Moderation Queue](docs/screenshots/05-queue.png)](docs/screenshots/05-queue.png) |
-| **🔔 In-App Live Notifications** | **🌙 Obsidian Dark Mode (Homepage)** |
-| [![Notifications](docs/screenshots/06-notifications.png)](docs/screenshots/06-notifications.png) | [![Dark Mode](docs/screenshots/01-home-dark.png)](docs/screenshots/01-home-dark.png) |
+| **🔔 In-App Live Notifications** | |
+| [![Notifications](docs/screenshots/06-notifications.png)](docs/screenshots/06-notifications.png) | |
 <!-- screenshot-grid:end -->
 
 See [`docs/screenshots/README.md`](docs/screenshots/README.md) for the full list, capture instructions, and what each shot demonstrates.
